@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Formulation optimizer · Joel Lee</title>
-<meta name="description" content="How Joel Lee built a prototype that suggests a starting formulation for eight target attributes from 40 past trials.">
+<meta name="description" content="How Joel Lee built a prototype that suggests a starting formulation for eight target attributes from 40 data points.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -46,7 +46,7 @@
       <h1>Formulation optimizer</h1>
       <p class="used">Prototype from an R&amp;D rotation</p>
       <p class="lede">Suggests a starting formulation to guide bench prototyping.</p>
-      <p class="meta">Prototype: a proof of concept from my Research Technologist rotation, not a production model. I built it on my own.</p>
+      <p class="meta">Prototype: a proof of concept from my Research Technologist rotation.</p>
     </header>
     <div class="motif motif-formulation-b" aria-hidden="true"><svg viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg">
   <text class="proto m-fade" x="16" y="22" style="--d:0">prototype</text>
@@ -65,7 +65,7 @@
     <figure class="fig">
       <div class="frame">
         <svg viewBox="0 0 652 800" role="img" aria-labelledby="flow-title">
-          <title id="flow-title">Prototype flow: 40 past trials with 100 ingredient features each, more features than trials. Ingredients with similar functional roles are grouped into fewer features, with advice from technologists. Random Forest regression predicts eight target attributes and is checked with leave-one-out cross-validation. NSGA-II searches for a formulation that balances the targets and suggests a starting formulation. One bench test found the measured profile broadly similar to the prediction, with differences consistent with the model's expected error.</title>
+          <title id="flow-title">Prototype flow: 40 data points with 100 features each, more features than data points. Ingredients with similar functional roles are grouped into fewer features, with advice from technologists. Random Forest regression predicts eight target attributes and is checked with leave-one-out cross-validation. NSGA-II searches for a formulation that balances the targets and suggests a starting formulation. One bench test found the measured profile broadly similar to the prediction, with differences consistent with the model's expected error.</title>
 
           <text class="proto" x="8" y="20">PROTOTYPE</text>
           <text class="proto-note" x="100" y="20">Proof of concept, not a production model</text>
@@ -82,13 +82,13 @@
 
           <g class="node" data-node="data">
             <rect x="40" y="48" width="400" height="196"/>
-            <text class="t" x="56" y="73">Past trials</text>
-            <text class="s" x="56" y="94">More features than trials: the core difficulty</text>
-            <text class="s" x="56" y="118">100 ingredient features</text>
+            <text class="t" x="56" y="73">Training data</text>
+            <text class="s" x="56" y="94">More features than data points: the core difficulty</text>
+            <text class="s" x="56" y="118">100 features</text>
             <rect x="56" y="126" width="250" height="100"/>
             <path class="grid" d="M81 126V226M106 126V226M131 126V226M156 126V226M181 126V226M206 126V226M231 126V226M256 126V226M281 126V226M56 151H306M56 176H306M56 201H306"/>
             <text class="s" x="318" y="172">40</text>
-            <text class="s" x="318" y="188">trials</text>
+            <text class="s" x="318" y="188">data points</text>
           </g>
           <g class="node" data-node="agg"><rect x="40" y="280" width="400" height="76"/><text class="t" x="56" y="305">Domain feature aggregation</text><text class="s" x="56" y="326">Ingredients with similar functional roles</text><text class="s" x="56" y="342">grouped into fewer features</text></g>
           <g class="node" data-node="tech"><rect x="472" y="280" width="160" height="76"/><text class="t" x="484" y="305">Technologists</text><text class="s" x="484" y="326">Advised which</text><text class="s" x="484" y="342">roles belong together</text></g>
@@ -98,7 +98,7 @@
             <text class="s" x="56" y="438">Predicts eight target attributes</text>
             <rect x="302" y="429" width="10" height="10"/><rect x="318" y="429" width="10" height="10"/><rect x="334" y="429" width="10" height="10"/><rect x="350" y="429" width="10" height="10"/><rect x="366" y="429" width="10" height="10"/><rect x="382" y="429" width="10" height="10"/><rect x="398" y="429" width="10" height="10"/><rect x="414" y="429" width="10" height="10"/>
           </g>
-          <g class="node" data-node="loocv"><rect x="472" y="392" width="160" height="76"/><text class="t" x="484" y="417">Leave-one-out CV</text><text class="s" x="484" y="438">Each trial held out</text><text class="s" x="484" y="454">once and predicted</text></g>
+          <g class="node" data-node="loocv"><rect x="472" y="392" width="160" height="76"/><text class="t" x="484" y="417">Leave-one-out CV</text><text class="s" x="484" y="438">Each point held out</text><text class="s" x="484" y="454">once and predicted</text></g>
           <g class="node" data-node="nsga"><rect x="40" y="488" width="400" height="60"/><text class="t" x="56" y="513">NSGA-II search</text><text class="s" x="56" y="534">Multi-objective search that balances the eight targets</text></g>
           <g class="node" data-node="suggestion"><rect x="40" y="584" width="400" height="60"/><text class="t" x="56" y="609">Suggested starting formulation</text><text class="s" x="56" y="630">A starting point for technologists, not a replacement</text></g>
           <g class="node" data-node="bench"><rect x="40" y="680" width="400" height="92"/><text class="t" x="56" y="705">One bench test</text><text class="s" x="56" y="726">Measured profile broadly similar to the prediction</text><text class="s" x="56" y="742">Differences consistent with the model’s expected error</text><text class="s" x="56" y="758">One test, so not general validation</text></g>
@@ -110,62 +110,51 @@
     <div class="text">
       <section data-nodes="data suggestion" aria-labelledby="problem">
         <h2 id="problem">The problem</h2>
-        <p>New formulations start at the bench from a blank canvas. The aim of this prototype was to give technologists a starting point instead: predict eight target attributes from the ingredients and their dosage, then search for a formulation that comes close to the targets they want.</p>
-        <p>The hard part was the data. There were only 40 past trials to learn from, described by 100 ingredient features. A model with more inputs than examples can fit the training trials almost perfectly and still predict new ones badly, so the <span class="term" data-node="data">shape of the data</span> drove most of the design.</p>
+        <p>New formulations start at the bench from a blank canvas. The aim of this project was to give technologists a starting point instead: predict eight target attributes from the ingredients and their dosage, then search for a formulation that comes close to the targets they want.</p>
+        <p>The hard part was the data. There were only 40 data points to train from, with 100 features. A model with more inputs than examples can easily overfit, so the <span class="term" data-node="data">shape of the data</span> drove most of the model training design.</p>
       </section>
 
       <section data-nodes="" aria-labelledby="owned">
         <h2 id="owned">What I owned</h2>
-        <p>I built the prototype on my own during my Research Technologist rotation, the first assignment of my rotational scholarship program. That covers the feature aggregation, the Random Forest models, the leave-one-out validation and the NSGA-II search.</p>
-        <p>Technologists supplied the domain knowledge for grouping ingredients.</p>
+        <p>I built the prototype on my own during my Research Technologist rotation. That covers feature aggregation, the Random Forest models, hyperparameter tuning, the leave-one-out validation and the NSGA-II search.</p>
       </section>
 
       <section data-nodes="" aria-labelledby="how">
         <h2 id="how">How it works</h2>
         <div class="step" data-nodes="data agg tech">
           <h3>Shrink the inputs</h3>
-          <p>Rather than feed the model all of the original ingredient features, I grouped ingredients with similar functional roles into <span class="term" data-node="agg">fewer, broader features</span>. I worked out the groups by consulting <span class="term" data-node="tech">technologists</span>, so each group means something to the people who would use the result.</p>
+          <p>Rather than feed the model all of the original features, I grouped ingredients with similar functional roles into <span class="term" data-node="agg">fewer, broader features</span>. I worked out the groups by consulting <span class="term" data-node="tech">expert technologists</span>, so each group means something to the people who would use the result.</p>
         </div>
         <div class="step" data-nodes="rf loocv">
           <h3>Predict the targets</h3>
-          <p><span class="term" data-node="rf">Random Forest regression</span> predicts the eight target attributes from the grouped features. To estimate how wrong it is likely to be on a new trial, I used <span class="term" data-node="loocv">leave-one-out cross-validation</span>: each trial is held out in turn, the model is trained on the rest, and it predicts the trial it never saw.</p>
+          <p><span class="term" data-node="rf">Random Forest regression</span> predicts the eight target attributes from the grouped features. To estimate how wrong it is likely to be on a new data point, I used <span class="term" data-node="loocv">leave-one-out cross-validation</span>: each data point is held out in turn, the model is trained on the rest, and it predicts the one it never saw.</p>
         </div>
         <div class="step" data-nodes="rf nsga suggestion">
           <h3>Search for a balanced formulation</h3>
-          <p>With eight targets, improving one attribute can worsen another. <span class="term" data-node="nsga">NSGA-II</span>, an evolutionary multi-objective algorithm, uses the models to search for formulations that balance the desired target attributes and contextual inputs. The output is a <span class="term" data-node="suggestion">suggested starting formulation</span> for technologists to take to the bench.</p>
+          <p>With eight targets, improving one attribute can worsen another. I decided to use <span class="term" data-node="nsga">NSGA-II</span>, an evolutionary multi-objective algorithm, to produce optimized formulations that balance the desired target attributes and contextual inputs. The output is a <span class="term" data-node="suggestion">suggested starting formulation</span> for technologists to take to the bench.</p>
         </div>
         <div class="step" data-nodes="suggestion bench rf">
           <h3>Check one at the bench</h3>
-          <p>I entered the target profile, and NSGA-II returned its five best candidate formulations. I picked the one whose predicted attributes had the least error against the targets, by RMSE and MAE, together with a technologist’s judgment. That formulation was made and tested. Its <span class="term" data-node="bench">measured profile</span> was broadly similar to the prediction, with differences consistent with the model’s expected error.</p>
+          <p>Using the models and algorithms produced, a prototype was chosen based on the least RMSE and MAE against the targets, together with a technologist's judgement on the formulation. This formulation was then made and tested. Its <span class="term" data-node="bench">measured profile</span> was broadly similar to the prediction, with differences consistent with the model’s expected error.</p>
         </div>
       </section>
 
       <section data-nodes="" aria-labelledby="decisions">
         <h2 id="decisions">Decisions</h2>
         <div class="step" data-nodes="data agg tech">
-          <h3>Grouped features with technologists</h3>
-          <p>100 features against 40 trials is a severe small-sample problem. Grouping ingredients by functional role cut the number of inputs, and doing it with technologists put their knowledge into the model instead of leaving the grouping to an algorithm.</p>
-          <p class="run"><b>Trade-off.</b> The model now reasons about groups, not single ingredients, so it cannot tell apart two ingredients that share a group.</p>
+          <h3>Grouped features with domain experts</h3>
+          <p>100 features against 40 data points is a severe small-sample problem. Grouping ingredients by functional role cut the number of inputs, and doing it with domain experts put their knowledge into the model instead of leaving the grouping to an algorithm.</p>
+          <p class="run"><b>Trade-off.</b> The model reasons about groups, not single ingredients, so it cannot tell apart two ingredients that share a group. It also trades some bias for lower variance: a simpler model may miss real effects, but it is less likely to fit noise.</p>
         </div>
         <div class="step" data-nodes="rf loocv">
           <h3>Leave-one-out instead of a held-out test set</h3>
-          <p>With 40 trials, setting aside a separate test set would leave very few trials to learn from and very few to test on. Leave-one-out uses every trial for testing once while training on all the others.</p>
-          <p class="run"><b>Trade-off.</b> It still rests on 40 trials, so the error estimate is itself uncertain. It tells me roughly how far to trust a prediction, not that the model generalizes.</p>
+          <p>With 40 data points, setting aside a separate test set would leave very few to learn from and very few to test on. Leave-one-out uses every data point for testing once while training on all the others.</p>
+          <p class="run"><b>Trade-off.</b> With only 40 data points, the error estimate itself is noisy. It tells me roughly how far to trust a prediction, not that the model generalizes.</p>
         </div>
         <div class="step" data-nodes="nsga suggestion bench">
           <h3>Framed the output as a starting point</h3>
           <p>The output is a starting formulation for bench work, not an answer. Physical formulation work stays with the technologists; the prototype only proposes where to begin.</p>
         </div>
-      </section>
-
-      <section data-nodes="loocv bench" aria-labelledby="evidence">
-        <h2 id="evidence">Evidence</h2>
-        <ul>
-          <li>40 past trials and 100 original ingredient features.</li>
-          <li>Eight target attributes, predicted with Random Forest regression and checked with leave-one-out cross-validation.</li>
-          <li>One formulation suggested by the model was physically tested. Its measured profile was broadly similar to the prediction, with differences consistent with the model’s expected error.</li>
-        </ul>
-        <p class="run"><b>How far to trust it.</b> The dataset is small, and the physical check was a single test. A result within the expected error is encouraging, not proof that the model generalizes.</p>
       </section>
     </div>
   </main>
