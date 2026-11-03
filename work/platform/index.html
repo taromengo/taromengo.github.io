@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Centralized App platform · Joel Lee</title>
+<meta name="description" content="How Joel Lee set up and runs a self-hosted ShinyProxy platform that puts an organization's internal analytics apps behind one sign-in.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../case-study.css">
+<style>
+  /* The server is a frame around the parts it hosts; manual steps are dashed. */
+  .node.frame-box rect { fill: none; stroke: var(--hair); }
+  .node.frame-box .k { fill: var(--ink-2); font-size: 12.5px; font-weight: 700; }
+  .node.manual rect { stroke-dasharray: 4 3; }
+</style>
+<style>
+  /* Hero motif, version C of the animations review (docs/prototypes/archive/animations-review). */
+  .motif-platform-c line, .motif-platform-c .door { stroke: var(--band-muted); stroke-width: 1.2; fill: none; }
+  .motif-platform-c .ground { stroke: var(--band-faint); }
+  .motif-platform-c .wall { transform-origin: center bottom; animation: platformc-up 420ms var(--ease-out) calc(var(--d) * 1ms) both; }
+  .motif-platform-c .win { fill: none; stroke: var(--band-faint); stroke-width: 1; }
+  .motif-platform-c .lit { fill: var(--band-fg); fill-opacity: 0.5; animation: platformc-on 260ms ease-out calc(var(--d) * 1ms) both; }
+  .motif-platform-c .lit.warm { fill: var(--band-accent); fill-opacity: 0.95; }
+  .motif-platform-c .lit.idle { opacity: 0; animation: platformc-idle 900ms ease-out calc(var(--d) * 1ms) both; }
+  .motif-platform-c .person { fill: var(--band-fg); opacity: 0; animation: platformc-walk 600ms linear calc(var(--d) * 1ms) both; }
+  @keyframes platformc-up { from { transform: scaleY(0); } }
+  @keyframes platformc-on { from { opacity: 0; } }
+  @keyframes platformc-idle { 0% { opacity: 0; } 20% { opacity: 1; } 70% { opacity: 1; } }
+  @keyframes platformc-walk { 0% { opacity: 1; transform: translateX(var(--fx)); } 92% { opacity: 1; transform: translateX(0); } }
+</style>
+</head>
+<body>
+<div class="band"><div class="page">
+  <nav class="top" aria-label="Site">
+    <a class="back" href="../../"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 7H2M6 3L2 7l4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>All systems</a>
+  </nav>
+  <div class="hero">
+    <header class="intro">
+      <h1>Centralized App platform</h1>
+      <p class="used">Roughly 80 users a month</p>
+      <p class="lede">Hundreds of accounts reach 15–20 internal analytics apps through one sign-in, instead of a scattered set of links.</p>
+      <p class="meta">Live. I set up the server, containerized every app on it, and run the platform.</p>
+    </header>
+    <div class="motif motif-platform-c" aria-hidden="true"><svg viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg">
+  <line class="ground m-draw" x1="40" y1="330" x2="440" y2="330" style="--d:0"/>
+  <line class="wall" x1="112" y1="30" x2="112" y2="330" style="--d:80"/>
+  <line class="wall" x1="368" y1="30" x2="368" y2="330" style="--d:80"/>
+  <line class="m-draw" x1="112" y1="30" x2="368" y2="30" style="--d:300"/>
+  <line class="m-draw" x1="112" y1="272" x2="368" y2="272" style="--d:340"/>
+  <rect class="door m-fade" x="225" y="290" width="30" height="40" style="--d:420"/>
+  <rect class="win m-fade" x="135" y="52" width="30" height="26" style="--d:540"/><rect class="win m-fade" x="180" y="52" width="30" height="26" style="--d:540"/><rect class="win m-fade" x="225" y="52" width="30" height="26" style="--d:540"/><rect class="win m-fade" x="270" y="52" width="30" height="26" style="--d:540"/><rect class="win m-fade" x="315" y="52" width="30" height="26" style="--d:540"/><rect class="win m-fade" x="135" y="96" width="30" height="26" style="--d:480"/><rect class="win m-fade" x="180" y="96" width="30" height="26" style="--d:480"/><rect class="win m-fade" x="225" y="96" width="30" height="26" style="--d:480"/><rect class="win m-fade" x="270" y="96" width="30" height="26" style="--d:480"/><rect class="win m-fade" x="315" y="96" width="30" height="26" style="--d:480"/><rect class="win m-fade" x="135" y="140" width="30" height="26" style="--d:420"/><rect class="win m-fade" x="180" y="140" width="30" height="26" style="--d:420"/><rect class="win m-fade" x="225" y="140" width="30" height="26" style="--d:420"/><rect class="win m-fade" x="270" y="140" width="30" height="26" style="--d:420"/><rect class="win m-fade" x="315" y="140" width="30" height="26" style="--d:420"/><rect class="win m-fade" x="135" y="184" width="30" height="26" style="--d:360"/><rect class="win m-fade" x="180" y="184" width="30" height="26" style="--d:360"/><rect class="win m-fade" x="225" y="184" width="30" height="26" style="--d:360"/><rect class="win m-fade" x="270" y="184" width="30" height="26" style="--d:360"/><rect class="win m-fade" x="315" y="184" width="30" height="26" style="--d:360"/><rect class="win m-fade" x="135" y="228" width="30" height="26" style="--d:300"/><rect class="win m-fade" x="180" y="228" width="30" height="26" style="--d:300"/><rect class="win m-fade" x="225" y="228" width="30" height="26" style="--d:300"/><rect class="win m-fade" x="270" y="228" width="30" height="26" style="--d:300"/><rect class="win m-fade" x="315" y="228" width="30" height="26" style="--d:300"/><rect class="lit lit" x="181" y="97" width="28" height="24" style="--d:850"/><rect class="lit idle" x="316" y="97" width="28" height="24" style="--d:916"/><rect class="lit lit" x="181" y="141" width="28" height="24" style="--d:982"/><rect class="lit lit" x="271" y="185" width="28" height="24" style="--d:1048"/><rect class="lit idle" x="316" y="229" width="28" height="24" style="--d:1114"/><rect class="lit lit" x="271" y="141" width="28" height="24" style="--d:1180"/><rect class="lit lit" x="226" y="141" width="28" height="24" style="--d:1246"/><rect class="lit idle" x="316" y="53" width="28" height="24" style="--d:1312"/><rect class="lit lit" x="316" y="141" width="28" height="24" style="--d:1378"/><rect class="lit lit" x="226" y="97" width="28" height="24" style="--d:1444"/><rect class="lit lit" x="271" y="53" width="28" height="24" style="--d:1510"/><rect class="lit lit" x="136" y="229" width="28" height="24" style="--d:1576"/><rect class="lit lit" x="271" y="97" width="28" height="24" style="--d:1642"/><rect class="lit lit" x="181" y="185" width="28" height="24" style="--d:1708"/><rect class="lit lit" x="271" y="229" width="28" height="24" style="--d:1774"/><rect class="lit lit" x="136" y="97" width="28" height="24" style="--d:1840"/><rect class="lit lit" x="136" y="185" width="28" height="24" style="--d:1906"/><rect class="lit warm" x="226" y="53" width="28" height="24" style="--d:1972"/><rect class="lit warm" x="181" y="53" width="28" height="24" style="--d:2038"/><rect class="lit warm" x="136" y="141" width="28" height="24" style="--d:2104"/><circle class="person" cx="240" cy="326" r="2.5" style="--fx:-190px; --d:250"/><circle class="person" cx="240" cy="326" r="2.5" style="--fx:190px; --d:440"/><circle class="person" cx="240" cy="326" r="2.5" style="--fx:-190px; --d:630"/><circle class="person" cx="240" cy="326" r="2.5" style="--fx:190px; --d:820"/><circle class="person" cx="240" cy="326" r="2.5" style="--fx:-190px; --d:1010"/><circle class="person" cx="240" cy="326" r="2.5" style="--fx:190px; --d:1200"/><circle class="person" cx="240" cy="326" r="2.5" style="--fx:-190px; --d:1390"/>
+</svg></div>
+  </div>
+</div></div>
+
+<div class="page">
+  <main class="cs">
+    <figure class="fig">
+      <div class="frame">
+        <svg viewBox="0 0 652 486" role="img" aria-labelledby="arch-title">
+          <title id="arch-title">Architecture: users sign in once to ShinyProxy on a self-hosted server. ShinyProxy has Podman start an app's container when someone opens it and stop it after logout or inactivity. Frequently used read-only apps run in a shared container. A monitoring app stores and reads ShinyProxy logs through PostgreSQL, and SQL databases are backed up weekly.</title>
+
+          <g class="node frame-box" data-node="server"><rect x="24" y="96" width="432" height="356"/><text class="k" x="36" y="116">Self-hosted server</text></g>
+
+          <g class="edge" data-link="users proxy"><path d="M240 76V128"/><path class="head" d="M235.5 128L240 136L244.5 128Z"/></g>
+          <g class="edge" data-link="proxy podman"><path d="M240 212V240"/><path class="head" d="M235.5 240L240 248L244.5 240Z"/></g>
+          <g class="edge" data-link="podman session"><path d="M240 324V338H137V352"/><path class="head" d="M132.5 352L137 360L141.5 352Z"/></g>
+          <g class="edge" data-link="podman shared"><path d="M240 338H343V352"/><path class="head" d="M338.5 352L343 360L347.5 352Z"/></g>
+          <g class="edge aside" data-link="proxy monitor"><path d="M440 168H464"/><path class="head" d="M464 163.5L472 168L464 172.5Z"/></g>
+          <g class="edge" data-link="monitor postgres"><path d="M552 228V256"/><path class="head" d="M547.5 256L552 264L556.5 256Z"/></g>
+          <g class="edge aside" data-link="postgres backup"><path d="M552 324V352"/><path class="head" d="M547.5 352L552 360L556.5 352Z"/></g>
+
+          <g class="node" data-node="users"><rect x="40" y="16" width="400" height="60"/><text class="t" x="56" y="41">Users</text><text class="s" x="56" y="62">300 accounts; 80 active monthly users</text></g>
+          <g class="node" data-node="proxy"><rect x="40" y="136" width="400" height="76"/><text class="t" x="56" y="161">ShinyProxy</text><text class="s" x="56" y="182">One sign-in for every app</text><text class="s" x="56" y="198">Group-based app access, managed in one configuration</text></g>
+          <g class="node" data-node="podman"><rect x="40" y="248" width="400" height="76"/><text class="t" x="56" y="273">Podman</text><text class="s" x="56" y="294">Starts an app’s container when someone opens it</text><text class="s" x="56" y="310">Stops when idle; keeps the most frequented apps warm</text></g>
+          <g class="node" data-node="session"><rect x="40" y="360" width="194" height="76"/><text class="t" x="52" y="385">App container</text><text class="s" x="52" y="406">Started for one user’s</text><text class="s" x="52" y="422">session</text></g>
+          <g class="node" data-node="shared"><rect x="246" y="360" width="194" height="76"/><text class="t" x="258" y="385">Shared container</text><text class="s" x="258" y="406">Frequently used read-only</text><text class="s" x="258" y="422">apps; users share one</text></g>
+
+          <g class="node" data-node="monitor"><rect x="472" y="136" width="160" height="92"/><text class="t" x="484" y="161">Monitoring app</text><text class="s" x="484" y="182">Stores and reads</text><text class="s" x="484" y="198">ShinyProxy logs</text><text class="s" x="484" y="214">for troubleshooting</text></g>
+          <g class="node" data-node="postgres"><rect x="472" y="264" width="160" height="60"/><text class="t" x="484" y="289">PostgreSQL</text><text class="s" x="484" y="310">Holds the logs</text></g>
+          <g class="node" data-node="backup"><rect x="472" y="360" width="160" height="76"/><text class="t" x="484" y="385">Weekly backups</text><text class="s" x="484" y="406">Automated SQL</text><text class="s" x="484" y="422">database backups</text></g>
+
+        </svg>
+      </div>
+      <figcaption></figcaption>
+    </figure>
+
+    <div class="text">
+      <section data-nodes="users proxy" aria-labelledby="problem">
+        <h2 id="problem">The problem</h2>
+        <p>Internal analytics apps were scattered across separate links. There was no shared way to give people access, track usage or deploy, so finding the right app meant knowing the right link.</p>
+        <p>Version control was limited or absent, so there was no common record of how each app changed.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="owned">
+        <h2 id="owned">What I owned</h2>
+        <p>The whole SDLC. I set up the self-hosted server, containerized every app it hosts, and configured ShinyProxy, including who can open which app. I also introduced the Git workflow, built the monitoring app and set up weekly log backups.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="how">
+        <h2 id="how">How it works</h2>
+        <div class="step" data-nodes="users proxy">
+          <h3>One sign-in, access by group</h3>
+          <p>Everyone signs in once to <span class="term" data-node="proxy">ShinyProxy</span> and sees the apps their group is allowed to open. Group access for every app lives in one configuration, so access is managed in one place.</p>
+        </div>
+        <div class="step" data-nodes="proxy podman session apps">
+          <h3>Containers only while someone is working</h3>
+          <p>Each of the 15–20 apps runs in its own container. When someone opens an app, ShinyProxy has <span class="term" data-node="podman">Podman</span> start its container. After the user logs out or goes inactive, the container stops, so idle apps hold no server resources. The most-used apps keep warm containers ready, so they open without the usual start-up wait.</p>
+        </div>
+        <div class="step" data-nodes="podman shared apps">
+          <h3>Shared containers for busy read-only apps</h3>
+          <p>Frequently used read-only apps run in a <span class="term" data-node="shared">shared container</span>. Concurrent users of one of those apps share a container instead of each starting their own to reduce resource usage.</p>
+        </div>
+      </section>
+
+      <section data-nodes="" aria-labelledby="decisions">
+        <h2 id="decisions">Decisions</h2>
+        <div class="step" data-nodes="podman session">
+          <h3>Warm containers for the busiest apps</h3>
+          <p>Starting every app on demand saves server capacity, but people wait while the container starts. I monitored which apps were used most and gave those warm containers through ShinyProxy’s pre-initialization feature.</p>
+          <p class="run"><b>Trade-off.</b> A warm container holds resources even when no one is using it, so I keep them only for the busiest apps. The rest still use nothing when idle.</p>
+        </div>
+        <div class="step" data-nodes="shared podman apps">
+          <h3>Share containers only for read-only apps</h3>
+          <p>One container per user is the safe default, but it multiplies load when many people open the same app. For frequently used read-only apps, I let concurrent users share one container.</p>
+          <p class="run"><b>Trade-off.</b> Sharing is only safe when one user cannot affect another, so I share containers only for read-only apps that hold no state between users, and Shiny keeps each user’s session separate on the app’s server. Sharing has caused no problems so far.</p>
+        </div>
+      </section>
+
+      <section data-nodes="users apps" aria-labelledby="evidence">
+        <h2 id="evidence">Evidence</h2>
+        <ul>
+          <li>300 provisioned accounts</li>
+          <li>80 users a month.</li>
+          <li>15–20 containerized apps hosted.</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <span>Joel Lee · Singapore</span>
+    <nav aria-label="Footer">
+      <a href="../../">All systems</a>
+      <button class="theme" type="button" id="theme"></button>
+    </nav>
+  </footer>
+</div>
+<script src="../case-study.js"></script>
+</body>
+</html>

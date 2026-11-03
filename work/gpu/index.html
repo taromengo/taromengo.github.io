@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local inference stack · Joel Lee</title>
+<meta name="description" content="How Joel Lee set up an on-premises GPU inference stack that moves search models and simple coding tasks off paid APIs, behind one endpoint.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../case-study.css">
+<style>
+  /* Hero motif, version B of the animations review (docs/prototypes/archive/animations-review). */
+  .motif-gpu-b text { fill: var(--band-muted); font-size: 11px; font-family: "Schibsted Grotesk", system-ui, sans-serif; }
+  .motif-gpu-b .boundary { fill: none; stroke: var(--band-muted); stroke-width: 1; stroke-dasharray: 4 3; }
+  .motif-gpu-b .block { fill: none; stroke: var(--band-muted); stroke-width: 1.5; }
+  .motif-gpu-b .app { fill: var(--band-fg); fill-opacity: 0.85; }
+  .motif-gpu-b .warm { fill: var(--band-accent); fill-opacity: 0.4; animation: gpub-warm 420ms ease-out 1400ms both; }
+  .motif-gpu-b .heavy { fill: var(--band-faint); transform-origin: center; animation: gpub-thin 520ms var(--ease-in-out) 1050ms both; }
+  .motif-gpu-b .thin { fill: var(--band-muted); }
+  .motif-gpu-b .lane { stroke: var(--band-muted); stroke-width: 1.5; }
+  .motif-gpu-b .out { fill: var(--band-fg); opacity: 0; animation: gpub-out 720ms linear calc(var(--d) * 1ms) both; }
+  .motif-gpu-b .in { fill: var(--band-fg); animation: gpub-in 520ms var(--ease-in-out) calc(var(--d) * 1ms) both; }
+  .motif-gpu-b .trickle { fill: var(--band-accent); }
+  @keyframes gpub-out {
+    0% { opacity: 0; transform: translateX(0); }
+    12% { opacity: 1; }
+    88% { opacity: 1; transform: translateX(246px); }
+    100% { opacity: 0; transform: translateX(246px); }
+  }
+  @keyframes gpub-in {
+    0% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
+    30% { opacity: 1; }
+  }
+  @keyframes gpub-thin { from { transform: scaleY(6); } }
+  @keyframes gpub-warm { from { opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="band"><div class="page">
+  <nav class="top" aria-label="Site">
+    <a class="back" href="../../"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 7H2M6 3L2 7l4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>All systems</a>
+  </nav>
+  <div class="hero">
+    <header class="intro">
+      <h1>Local inference stack</h1>
+      <p class="used">Runs hybrid search and simple coding tasks on open-weight models</p>
+      <p class="lede">Work that does not need a frontier model runs on company hardware, with no API fee: hybrid search for production apps, and simple coding tasks.</p>
+    </header>
+    <div class="motif motif-gpu-b" aria-hidden="true"><svg viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg">
+      <rect class="boundary m-fade" x="20" y="40" width="292" height="282" style="--d:0"/>
+      <text class="m-fade" x="32" y="60" style="--d:60">Company network</text>
+      <rect class="app m-fade" x="50" y="150" width="60" height="44" style="--d:40"/>
+      <rect class="block m-fade" x="370" y="150" width="90" height="52" style="--d:80"/>
+      <text class="m-fade" x="370" y="222" style="--d:120">Answer API</text>
+      <rect class="heavy" x="110" y="175" width="260" height="2"/>
+      <rect class="thin m-fade" x="110" y="175" width="260" height="2" style="--d:1500"/>
+      <circle class="out" cx="114" cy="169" r="3" style="--d:80"/><circle class="out" cx="114" cy="176" r="3" style="--d:150"/><circle class="out" cx="114" cy="183" r="3" style="--d:220"/><circle class="out" cx="114" cy="169" r="3" style="--d:290"/><circle class="out" cx="114" cy="176" r="3" style="--d:360"/><circle class="out" cx="114" cy="183" r="3" style="--d:430"/><circle class="out" cx="114" cy="169" r="3" style="--d:500"/><circle class="out" cx="114" cy="176" r="3" style="--d:570"/><circle class="out" cx="114" cy="183" r="3" style="--d:640"/>
+      <line class="lane m-draw-y" x1="80" y1="194" x2="80" y2="262" style="--d:1000"/>
+      <line class="lane m-draw" x1="80" y1="262" x2="200" y2="262" style="--d:1150"/>
+      <rect class="block m-fade" x="200" y="236" width="76" height="52" style="--d:900"/>
+      <rect class="warm" x="200" y="236" width="76" height="52"/>
+      <text class="m-fade" x="200" y="306" style="--d:960">Local GPU</text>
+      <circle class="in" cx="80" cy="228" r="3" style="--dx:0px; --dy:-38px; --d:1200"/><circle class="in" cx="80" cy="248" r="3" style="--dx:0px; --dy:-58px; --d:1280"/><circle class="in" cx="104" cy="262" r="3" style="--dx:-24px; --dy:-72px; --d:1360"/><circle class="in" cx="128" cy="262" r="3" style="--dx:-48px; --dy:-72px; --d:1440"/><circle class="in" cx="152" cy="262" r="3" style="--dx:-72px; --dy:-72px; --d:1520"/><circle class="in" cx="176" cy="262" r="3" style="--dx:-96px; --dy:-72px; --d:1600"/>
+      <circle class="trickle m-pop" cx="300" cy="176" r="2.5" style="--d:1800"/>
+      <circle class="trickle m-pop" cx="336" cy="176" r="2.5" style="--d:1880"/>
+    </svg></div>
+  </div>
+</div></div>
+
+<div class="page">
+  <main class="cs">
+    <figure class="fig">
+      <div class="frame">
+        <svg viewBox="0 0 652 540" role="img" aria-labelledby="arch-title">
+          <title id="arch-title">Architecture: the Agentic RAG assistant, a self-hosted Langfuse assistant and an IDE coding assistant call one OpenAI-compatible endpoint, run by llama-swap, which starts vLLM containers in Podman on a local GPU on demand. The containers serve an embedding model, a reranker and a local Qwen model. The RAG assistant sends a warm-up request when it opens, to hide a 40–60 second cold start. Answer generation and the LLM judge stay on an external API.</title>
+
+          <g class="edge" data-link="ragapp api"><path d="M444 54H468"/><path class="head" d="M468 49.5L476 54L468 58.5Z"/></g>
+          <g class="edge" data-link="langfuseapp llamaswap"><path d="M110 92V236"/><path class="head" d="M105.5 236L110 244L114.5 236Z"/></g>
+          <g class="edge" data-link="ragapp llamaswap"><path d="M246 92V236"/><path class="head" d="M241.5 236L246 244L250.5 236Z"/></g>
+          <g class="edge" data-link="ragapp warmup"><path d="M362 92V120"/><path class="head" d="M357.5 120L362 128L366.5 120Z"/></g>
+          <g class="edge" data-link="warmup llamaswap"><path d="M362 196V236"/><path class="head" d="M357.5 236L362 244L366.5 236Z"/></g>
+          <g class="edge" data-link="codeassist llamaswap"><path d="M476 282H452"/><path class="head" d="M452 277.5L444 282L452 286.5Z"/></g>
+          <g class="edge" data-link="llamaswap podman"><path d="M230 320V352"/><path class="head" d="M225.5 352L230 360L234.5 352Z"/></g>
+
+          <g class="node" data-node="langfuseapp"><rect x="16" y="16" width="188" height="76"/><text class="t" x="28" y="41">Langfuse assistant</text><text class="s" x="28" y="62">Self-hosted; builds</text><text class="s" x="28" y="78">evaluation dashboards</text></g>
+          <g class="node" data-node="ragapp"><rect x="220" y="16" width="224" height="76"/><text class="t" x="232" y="41">Agentic RAG assistant</text><text class="s" x="232" y="62">Search runs locally;</text><text class="s" x="232" y="78">answers come from the API</text></g>
+          <g class="node" data-node="api"><rect x="476" y="16" width="160" height="156"/><text class="t" x="488" y="41">External API</text><text class="s" x="488" y="62">Answer generation</text><text class="s" x="488" y="78">LLM judge</text><text class="s" x="488" y="104">Users wait on these,</text><text class="s" x="488" y="120">and they need a</text><text class="s" x="488" y="136">stronger model</text></g>
+          <g class="node" data-node="warmup"><rect x="280" y="128" width="164" height="68"/><text class="t" x="292" y="152">Warm-up request</text><text class="s" x="292" y="172">Sent on app open;</text><text class="s" x="292" y="188">hides a 40–60 s load</text></g>
+          <g class="node" data-node="llamaswap"><rect x="16" y="244" width="428" height="76"/><text class="t" x="28" y="269">llama-swap</text><text class="s" x="28" y="290">One OpenAI-compatible endpoint on one port</text><text class="s" x="28" y="306">Starts the model containers on demand</text></g>
+          <g class="node" data-node="codeassist"><rect x="476" y="244" width="160" height="76"/><text class="t" x="488" y="269">IDE assistant</text><text class="s" x="488" y="290">Simple coding tasks</text><text class="s" x="488" y="306">run locally</text></g>
+          <g class="node" data-node="podman"><rect x="16" y="360" width="428" height="164"/><text class="t" x="28" y="385">vLLM in Podman, on a local GPU</text><text class="s" x="28" y="406">Quantized open-weight models</text></g>
+          <g class="node" data-node="embed"><rect x="28" y="424" width="128" height="84"/><text class="t" x="40" y="449">Embeddings</text><text class="s" x="40" y="470">BGE-M3</text><text class="s" x="40" y="486">Hybrid search</text></g>
+          <g class="node" data-node="rerank"><rect x="166" y="424" width="128" height="84"/><text class="t" x="178" y="449">Reranker</text><text class="s" x="178" y="470">Cross-encoder</text><text class="s" x="178" y="486">Hybrid search</text></g>
+          <g class="node" data-node="qwen"><rect x="304" y="424" width="128" height="84"/><text class="t" x="316" y="449">Local Qwen</text><text class="s" x="316" y="470">Simple, repetitive</text><text class="s" x="316" y="486">tasks</text></g>
+        </svg>
+      </div>
+    </figure>
+
+    <div class="text">
+      <section data-nodes="api ragapp langfuseapp" aria-labelledby="problem">
+        <h2 id="problem">The problem</h2>
+        <p>Every embedding, reranking and assistant call went to paid APIs. Each call cost money that could've been saved.</p>
+        <p>Coding and developer tooling on frontier APIs was expensive too, even for simple work a smaller model can handle.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="owned">
+        <h2 id="owned">What I owned</h2>
+        <p>The end to end local infrastructure setup. From choosing models to serving them, designing the endpoint, and connecting production apps.</p>
+        <p>The main user is the <a href="../rag/">Agentic RAG assistant</a>, which has its own case study.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="how">
+        <h2 id="how">How it works</h2>
+        <div class="step" data-nodes="ragapp langfuseapp llamaswap codeassist">
+          <h3>One endpoint for every app</h3>
+          <p>Using <span class="term" data-node="llamaswap">llama-swap</span>, allowed for multiple OpenAI-compatible endpoints (completions, embeddings, reranking) to be called on a single port.</p>
+        </div>
+        <div class="step" data-nodes="llamaswap podman embed rerank qwen">
+          <h3>Models start on demand</h3>
+          <p>vLLM serves open-weight models in <span class="term" data-node="podman">Podman containers</span>, and llama-swap starts those containers on demand.</p>
+        </div>
+        <div class="step" data-nodes="ragapp warmup llamaswap embed rerank">
+          <h3>Warm-up hides the cold start</h3>
+          <p>Loading a model from cold takes 40–60 seconds, too long for someone waiting on their first question. To improve the user experience, I implemented a warm-up where the app sends a headless <span class="term" data-node="warmup">warm-up request</span>. llama-swap loads the embedding model and reranker before the first question arrives.</p>
+        </div>
+      </section>
+
+      <section data-nodes="" aria-labelledby="decisions">
+        <h2 id="decisions">Decisions</h2>
+        <div class="step" data-nodes="api ragapp embed rerank codeassist qwen">
+          <h3>Local or API, per workload</h3>
+          <p>Embedding and reranking use small models that run quickly on one GPU, and simple coding tasks and developer tooling can tolerate a slower local model. The RAG assistant’s answer generation and its LLM judge stay on an <span class="term" data-node="api">external API</span>, because users wait on them and they need a stronger model.</p>
+          <p class="run"><b>Trade-off.</b> The answers and the judge still carry a per-call API fee. In return, the users get lower latency with higher model intelligence.</p>
+        </div>
+        <div class="step" data-nodes="codeassist langfuseapp qwen">
+          <h3>Simple coding work goes local</h3>
+          <p>Coding and developer tooling adds up on APIs, so I decided to use local models for simple, small edits.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <span>Joel Lee · Singapore</span>
+    <nav aria-label="Footer">
+      <a href="../../">All systems</a>
+      <button class="theme" type="button" id="theme"></button>
+    </nav>
+  </footer>
+</div>
+<script src="../case-study.js"></script>
+</body>
+</html>

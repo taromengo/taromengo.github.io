@@ -1,0 +1,189 @@
+/* Shared by every case study: text on the left, the system's pinned figure on the right. */
+:root {
+  --ground: #f3f5f7;
+  --plot: #fbfcfd;
+  --ink: #15181c;
+  --ink-2: #4a525c;
+  --ink-3: #5f6873;
+  --hair: #d5dbe1;
+  --vector: #1d4ed8;
+  --focus: #1d4ed8;
+  /* The band is drawn in the opposite theme's colours, so its accent is the other theme's blue. */
+  --band-accent: #7ea2ff;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #101316; --plot: #15191d; --ink: #eef1f4; --ink-2: #b3bcc6; --ink-3: #8c96a1;
+    --hair: #2a3138; --vector: #7ea2ff; --focus: #7ea2ff; --band-accent: #1d4ed8; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #101316; --plot: #15191d; --ink: #eef1f4; --ink-2: #b3bcc6; --ink-3: #8c96a1;
+  --hair: #2a3138; --vector: #7ea2ff; --focus: #7ea2ff; --band-accent: #1d4ed8; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--ground); scrollbar-color: var(--hair) var(--ground); }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font: 400 17px/1.55 "Schibsted Grotesk", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--vector); color: var(--plot); }
+a { color: inherit; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-color: var(--vector); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
+button { font: inherit; color: inherit; }
+
+.page { max-width: 1320px; margin: 0 auto; padding: 0 40px; }
+
+.top { padding: 28px 0 0; font-size: 15px; }
+.back { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-weight: 500; text-decoration: none; }
+.back:hover { color: var(--ink); }
+.back svg { transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1); }
+.back:hover svg { transform: translateX(-3px); }
+
+/* The band: the intro on ink, drawn in the opposite theme's colours, with the system's motif beside it.
+   Motifs draw only with the five --band-* tokens. */
+.band {
+  --band-bg: var(--ink); --band-fg: var(--ground);
+  --band-muted: color-mix(in srgb, var(--band-fg) 72%, var(--band-bg));
+  --band-faint: color-mix(in srgb, var(--band-fg) 24%, var(--band-bg));
+  background: var(--band-bg); color: var(--band-fg);
+}
+.band ::selection { background: var(--band-fg); color: var(--band-bg); }
+.band :focus-visible { outline-color: var(--band-fg); }
+.band .back { color: var(--band-muted); }
+.band .back:hover { color: var(--band-fg); }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 0.72fr); gap: 32px 56px; align-items: center; padding: clamp(40px, 7vh, 80px) 0 56px; }
+.intro h1 { font-weight: 800; font-size: clamp(48px, 6vw, 96px); line-height: 0.92; letter-spacing: -0.035em; margin: 0 0 14px; text-wrap: balance; }
+.used { font-size: 15px; color: var(--band-muted); margin: 0 0 24px; }
+.lede { font-size: clamp(20px, 1.9vw, 27px); line-height: 1.3; font-weight: 500; letter-spacing: -0.01em; max-width: 26em; margin: 0 0 16px; text-wrap: pretty; }
+.meta { color: var(--band-muted); font-size: 15px; max-width: 34em; margin: 0; }
+
+/* The motif. Motion contract, shared by every motif:
+   1. Every keyframe defines only where an element starts; the end is its own resting state,
+      so the resting state is the finished drawing, and reduced motion shows exactly that.
+   2. transform, opacity and clip-path only. Lines draw with scaleX/scaleY on transform-box: fill-box.
+   3. Delays come from the element's own --d (ms). A motif finishes within about 2.4s and never loops. */
+.motif { width: 100%; max-width: 520px; justify-self: end; }
+.motif svg { display: block; width: 100%; height: auto; overflow: visible; }
+.motif * { transform-box: fill-box; }
+.m-fade { animation: m-fade 240ms ease-out calc(var(--d, 0) * 1ms) both; }
+.m-rise { animation: m-rise 320ms var(--ease-out) calc(var(--d, 0) * 1ms) both; }
+.m-pop { transform-origin: center; animation: m-pop 260ms var(--ease-out) calc(var(--d, 0) * 1ms) both; }
+.m-draw { transform-origin: left center; animation: m-draw 320ms var(--ease-out) calc(var(--d, 0) * 1ms) both; }
+.m-draw-r { transform-origin: right center; animation: m-draw 320ms var(--ease-out) calc(var(--d, 0) * 1ms) both; }
+.m-draw-y { transform-origin: center top; animation: m-draw-y 320ms var(--ease-out) calc(var(--d, 0) * 1ms) both; }
+@keyframes m-fade { from { opacity: 0; } }
+@keyframes m-rise { from { opacity: 0; transform: translateY(8px); } }
+@keyframes m-pop { from { opacity: 0; transform: scale(0.6); } }
+@keyframes m-draw { from { transform: scaleX(0); } }
+@keyframes m-draw-y { from { transform: scaleY(0); } }
+.intro h1 { animation: m-rise 360ms var(--ease-out) both; }
+/* A motif inside the text uses the page's own colours, and waits until it scrolls into view (case-study.js). */
+.motif.on-page {
+  --band-bg: var(--plot); --band-fg: var(--ink); --band-muted: var(--ink-2); --band-faint: var(--hair); --band-accent: var(--vector);
+  max-width: none; margin: 4px 0 8px; padding: 16px 20px; background: var(--plot); border: 1px solid var(--hair);
+}
+.motif.wait * { animation-play-state: paused; }
+
+/* The two columns. The text column holds a 60–70 character measure; the figure takes the rest. */
+.cs { display: grid; grid-template-columns: minmax(0, 33em) minmax(0, 1fr); grid-template-areas: "text fig"; gap: 0 56px; align-items: start; }
+.text { grid-area: text; }
+
+.text section { padding-top: 64px; }
+.text section:first-child { padding-top: 48px; }
+/* The problem's opening paragraph is stated at lead size, the way the home page states each problem. */
+.text section:first-child > p:first-of-type { font-size: clamp(20px, 1.7vw, 23px); line-height: 1.4; font-weight: 500; color: var(--ink); }
+.text h2 { font-size: 30px; line-height: 1.1; letter-spacing: -0.02em; font-weight: 700; margin: 0 0 14px; }
+.text h3 { font-size: 19px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 700; margin: 32px 0 8px; }
+.text h2 + .step h3, .text h2 + h3 { margin-top: 8px; }
+.text p { margin: 0 0 14px; text-wrap: pretty; }
+.text ul { margin: 0 0 14px; padding-left: 1.1em; }
+.text li { margin-bottom: 8px; padding-left: 4px; }
+.text li::marker { color: var(--ink-3); }
+.run b { font-weight: 700; }
+.quiet { color: var(--ink-2); }
+
+/* A term in the text points at its part of the figure while hovered. */
+.term { text-decoration: underline dotted var(--ink-3); text-underline-offset: 0.25em; cursor: default; }
+.term:hover { text-decoration-color: var(--vector); }
+
+/* The pinned figure */
+.fig { grid-area: fig; position: sticky; top: 24px; margin: 48px 0 0; }
+.frame { background: var(--plot); border: 1px solid var(--hair); height: min(calc(100svh - 96px), 860px); min-height: 520px; padding: 20px; }
+.frame > svg { width: 100%; height: 100%; display: block; }
+.fig figcaption { font-size: 14px; color: var(--ink-3); margin-top: 10px; }
+.fig .hint { display: none; }
+.fig.scrolls .hint { display: block; color: var(--ink-2); font-weight: 500; margin-bottom: 2px; }
+
+svg text { font-family: "Schibsted Grotesk", system-ui, sans-serif; }
+.node rect { fill: var(--plot); stroke: var(--ink-3); stroke-width: 1; }
+.node .t { fill: var(--ink); font-size: 16px; font-weight: 700; }
+.node .s { fill: var(--ink-3); font-size: 13.5px; }
+.edge path { fill: none; stroke: var(--ink-3); stroke-width: 1; }
+.edge path.head { fill: var(--ink-3); stroke: none; }
+.edge.aside path:not(.head) { stroke-dasharray: 3 3; }
+.node.removed rect { stroke-dasharray: 4 3; fill: none; }
+.node.removed .t { fill: var(--ink-2); }
+.node.removed line { stroke: var(--ink-2); stroke-width: 1.2; }
+.edge.removed path:not(.head) { stroke-dasharray: 4 3; }
+
+.node, .edge { transition: opacity 160ms ease-out; }
+.node rect, .edge path, .node .t { transition: stroke 160ms ease-out, fill 160ms ease-out; }
+.lit rect { stroke: var(--vector); stroke-width: 1.5; }
+.edge.lit path { stroke: var(--vector); }
+.edge.lit path.head { fill: var(--vector); }
+.dim { opacity: 0.32; }
+
+/* Evidence: a dot plot of the compared pipelines on a 0 to 1 scale */
+/* The label column is set in px so the scale row, at a smaller font size, lines up with the tracks. */
+.dots { list-style: none; padding: 0; margin: 20px 0 8px; --label: 188px; }
+.dots li { display: grid; grid-template-columns: var(--label) 1fr; gap: 16px; align-items: center; padding: 10px 0; margin: 0; border-bottom: 1px solid var(--hair); }
+.dots li::marker { content: none; }
+.dots .name { font-size: 15px; line-height: 1.3; }
+.dots .name small { display: block; font-size: 13px; color: var(--ink-3); }
+.track { position: relative; height: 22px; }
+.track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed var(--hair); }
+.track i { position: absolute; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; background: var(--ink); }
+.track i.on { background: var(--vector); box-shadow: 0 0 0 3px var(--plot), 0 0 0 5px var(--vector); }
+.track b { position: absolute; top: 50%; transform: translate(12px, -54%); font-size: 14px; font-weight: 500; white-space: nowrap; }
+.track i.on + b { transform: translate(16px, -54%); }
+.track .none { position: absolute; top: 50%; transform: translateY(-54%); font-size: 14px; color: var(--ink-3); background: var(--ground); padding-right: 8px; }
+.scale { display: grid; grid-template-columns: 188px 1fr; gap: 16px; font-size: 13px; color: var(--ink-3); }
+.scale span { display: flex; justify-content: space-between; }
+.dots + .scale + p { margin-top: 14px; font-size: 14px; color: var(--ink-3); }
+
+footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding: 96px 0 64px; color: var(--ink-2); font-size: 15px; }
+footer nav { display: flex; gap: 24px; flex-wrap: wrap; }
+footer .theme { background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 0.22em; text-decoration-color: var(--hair); color: var(--ink-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .node, .edge, .node rect, .edge path, .node .t, .back svg { transition: none; }
+  .motif *, .intro h1 { animation: none !important; }
+}
+
+/* Stacked: the figure follows the intro as a plain figure, scrolling sideways inside its frame if needed. */
+@media (max-width: 900px) {
+  .page { padding: 0 16px; }
+  .hero { grid-template-columns: 1fr; padding-top: 32px; }
+  .motif { justify-self: start; max-width: 420px; }
+  .cs { grid-template-columns: minmax(0, 1fr); grid-template-areas: "fig" "text"; }
+  .fig { position: static; margin-top: 32px; min-width: 0; }
+  .frame { height: auto; min-height: 0; padding: 12px; overflow-x: auto; }
+  .frame > svg { min-width: 520px; height: auto; }
+  .text section { padding-top: 48px; }
+  .dots li, .scale { grid-template-columns: 132px 1fr; gap: 12px; }
+  .track b { font-size: 13px; }
+}
+
+/* Phone width: each pipeline's name sits above its track, so names don't wrap to three lines. */
+@media (max-width: 560px) {
+  .dots li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .scale { grid-template-columns: minmax(0, 1fr); }
+  .scale > span:first-child { display: none; }
+}

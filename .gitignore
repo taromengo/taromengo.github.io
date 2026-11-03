@@ -1,0 +1,7 @@
+.impeccable/
+docs/
+
+.DS_Store
+# Private planning notes: keep out of the public repo
+PRODUCT.md
+DESIGN.md

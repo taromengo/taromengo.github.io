@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formulation optimizer · Joel Lee</title>
+<meta name="description" content="How Joel Lee built a prototype that suggests a starting formulation for eight target attributes from 40 past trials.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../case-study.css">
+<style>
+  .fig .proto { fill: var(--ink); font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em; }
+  .fig .proto-note { fill: var(--ink-3); font-size: 12.5px; }
+  .fig .proto-frame { fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 4 3; }
+  .fig .grid { fill: none; stroke: var(--hair); stroke-width: 1; }
+  .fig .lit .grid { stroke: var(--vector); stroke-opacity: 0.35; }
+</style>
+<style>
+  /* Hero motif, version B of the animations review (docs/prototypes/archive/animations-review). */
+  .motif-formulation-b .ring { fill: none; stroke: var(--band-faint); stroke-width: 1; }
+  .motif-formulation-b .spoke { stroke: var(--band-faint); stroke-width: 1; }
+  .motif-formulation-b .target { fill: none; stroke: var(--band-muted); stroke-width: 1.25; stroke-dasharray: 4 4; }
+  .motif-formulation-b .sug { fill: var(--band-accent); fill-opacity: 0.14; stroke: var(--band-accent); stroke-width: 1.5; stroke-linejoin: round;
+    transform-box: view-box; transform-origin: 240px 178px; animation: formb-grow 720ms var(--ease-out) 760ms both; }
+  .motif-formulation-b .sdot { fill: var(--band-accent); }
+  .motif-formulation-b .meas { animation: formb-land 320ms ease-out 1700ms both; }
+  .motif-formulation-b .meas polygon { fill: none; stroke: var(--band-fg); stroke-width: 1.25; stroke-linejoin: round; }
+  .motif-formulation-b .mdot { fill: none; stroke: var(--band-fg); stroke-width: 1.25; }
+  .motif-formulation-b .lab { fill: var(--band-muted); font-size: 11px; font-weight: 500; }
+  .motif-formulation-b .proto { fill: var(--band-muted); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; }
+  .motif-formulation-b .key-tgt { stroke: var(--band-muted); stroke-width: 1.25; stroke-dasharray: 4 4; }
+  .motif-formulation-b .key-sug { stroke: var(--band-accent); stroke-width: 1.5; }
+  .motif-formulation-b .key-mes { stroke: var(--band-fg); stroke-width: 1.25; }
+  @keyframes formb-grow { from { opacity: 0; transform: scale(0.15); } }
+  @keyframes formb-land { from { opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="band"><div class="page">
+  <nav class="top" aria-label="Site">
+    <a class="back" href="../../"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 7H2M6 3L2 7l4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>All systems</a>
+  </nav>
+  <div class="hero">
+    <header class="intro">
+      <h1>Formulation optimizer</h1>
+      <p class="used">Prototype from an R&amp;D rotation</p>
+      <p class="lede">Suggests a starting formulation to guide bench prototyping.</p>
+      <p class="meta">Prototype: a proof of concept from my Research Technologist rotation, not a production model. I built it on my own.</p>
+    </header>
+    <div class="motif motif-formulation-b" aria-hidden="true"><svg viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg">
+  <text class="proto m-fade" x="16" y="22" style="--d:0">prototype</text>
+  <polygon class="ring m-fade" points="240.0,114.0 285.3,132.7 304.0,178.0 285.3,223.3 240.0,242.0 194.7,223.3 176.0,178.0 194.7,132.7" style="--d:0"/><polygon class="ring m-fade" points="240.0,50.0 330.5,87.5 368.0,178.0 330.5,268.5 240.0,306.0 149.5,268.5 112.0,178.0 149.5,87.5" style="--d:0"/><g transform="translate(240 178) rotate(-90)"><line class="spoke m-draw" x1="0" y1="0" x2="128" y2="0" style="--d:60"/></g><g transform="translate(240 178) rotate(-45)"><line class="spoke m-draw" x1="0" y1="0" x2="128" y2="0" style="--d:90"/></g><g transform="translate(240 178) rotate(0)"><line class="spoke m-draw" x1="0" y1="0" x2="128" y2="0" style="--d:120"/></g><g transform="translate(240 178) rotate(45)"><line class="spoke m-draw" x1="0" y1="0" x2="128" y2="0" style="--d:150"/></g><g transform="translate(240 178) rotate(90)"><line class="spoke m-draw" x1="0" y1="0" x2="128" y2="0" style="--d:180"/></g><g transform="translate(240 178) rotate(135)"><line class="spoke m-draw" x1="0" y1="0" x2="128" y2="0" style="--d:210"/></g><g transform="translate(240 178) rotate(180)"><line class="spoke m-draw" x1="0" y1="0" x2="128" y2="0" style="--d:240"/></g><g transform="translate(240 178) rotate(225)"><line class="spoke m-draw" x1="0" y1="0" x2="128" y2="0" style="--d:270"/></g>
+  <polygon class="target m-fade" points="240.0,78.2 296.1,121.9 350.1,178.0 289.8,227.8 240.0,267.6 164.9,253.1 163.2,178.0 173.0,111.0" style="--d:520"/>
+  <polygon class="sug" points="240.0,83.3 299.7,118.3 343.7,178.0 293.4,231.4 240.0,263.8 162.2,255.8 167.0,178.0 176.6,114.6"/>
+  <circle class="sdot m-pop" cx="240.0" cy="83.3" r="3" style="--d:1300"/><circle class="sdot m-pop" cx="299.7" cy="118.3" r="3" style="--d:1335"/><circle class="sdot m-pop" cx="343.7" cy="178.0" r="3" style="--d:1370"/><circle class="sdot m-pop" cx="293.4" cy="231.4" r="3" style="--d:1405"/><circle class="sdot m-pop" cx="240.0" cy="263.8" r="3" style="--d:1440"/><circle class="sdot m-pop" cx="162.2" cy="255.8" r="3" style="--d:1475"/><circle class="sdot m-pop" cx="167.0" cy="178.0" r="3" style="--d:1510"/><circle class="sdot m-pop" cx="176.6" cy="114.6" r="3" style="--d:1545"/>
+  <g class="meas"><polygon points="240.0,88.4 295.2,122.8 347.5,178.0 288.0,226.0 240.0,271.4 168.5,249.5 159.4,178.0 179.4,117.4"/><circle class="mdot" cx="240.0" cy="88.4" r="2.5"/><circle class="mdot" cx="295.2" cy="122.8" r="2.5"/><circle class="mdot" cx="347.5" cy="178.0" r="2.5"/><circle class="mdot" cx="288.0" cy="226.0" r="2.5"/><circle class="mdot" cx="240.0" cy="271.4" r="2.5"/><circle class="mdot" cx="168.5" cy="249.5" r="2.5"/><circle class="mdot" cx="159.4" cy="178.0" r="2.5"/><circle class="mdot" cx="179.4" cy="117.4" r="2.5"/></g>
+  <g class="m-fade" style="--d:1900"><line class="key-tgt" x1="96" y1="340" x2="114" y2="340"/><text class="lab" x="120" y="344">target</text></g><g class="m-fade" style="--d:1900"><line class="key-sug" x1="204" y1="340" x2="222" y2="340"/><text class="lab" x="228" y="344">suggested</text></g><g class="m-fade" style="--d:1900"><line class="key-mes" x1="312" y1="340" x2="330" y2="340"/><text class="lab" x="336" y="344">bench test</text></g>
+</svg></div>
+  </div>
+</div></div>
+
+<div class="page">
+  <main class="cs">
+    <figure class="fig">
+      <div class="frame">
+        <svg viewBox="0 0 652 800" role="img" aria-labelledby="flow-title">
+          <title id="flow-title">Prototype flow: 40 past trials with 100 ingredient features each, more features than trials. Ingredients with similar functional roles are grouped into fewer features, with advice from technologists. Random Forest regression predicts eight target attributes and is checked with leave-one-out cross-validation. NSGA-II searches for a formulation that balances the targets and suggests a starting formulation. One bench test found the measured profile broadly similar to the prediction, with differences consistent with the model's expected error.</title>
+
+          <text class="proto" x="8" y="20">PROTOTYPE</text>
+          <text class="proto-note" x="100" y="20">Proof of concept, not a production model</text>
+          <rect class="proto-frame" x="8" y="30" width="636" height="758"/>
+
+          <g class="edge" data-link="data agg"><path d="M240 244V272"/><path class="head" d="M235.5 272L240 280L244.5 272Z"/></g>
+          <g class="edge aside" data-link="tech agg"><path d="M472 318H448"/><path class="head" d="M448 313.5L440 318L448 322.5Z"/></g>
+          <g class="edge" data-link="agg rf"><path d="M240 356V384"/><path class="head" d="M235.5 384L240 392L244.5 384Z"/></g>
+          <g class="edge aside" data-link="loocv rf"><path d="M472 422H448"/><path class="head" d="M448 417.5L440 422L448 426.5Z"/></g>
+          <g class="edge" data-link="rf nsga"><path d="M240 452V480"/><path class="head" d="M235.5 480L240 488L244.5 480Z"/></g>
+          <g class="edge" data-link="nsga suggestion"><path d="M240 548V576"/><path class="head" d="M235.5 576L240 584L244.5 576Z"/></g>
+          <g class="edge" data-link="suggestion bench"><path d="M240 644V672"/><path class="head" d="M235.5 672L240 680L244.5 672Z"/></g>
+          <g class="edge aside" data-link="bench rf"><path d="M40 726H22V422H32"/><path class="head" d="M32 417.5L40 422L32 426.5Z"/></g>
+
+          <g class="node" data-node="data">
+            <rect x="40" y="48" width="400" height="196"/>
+            <text class="t" x="56" y="73">Past trials</text>
+            <text class="s" x="56" y="94">More features than trials: the core difficulty</text>
+            <text class="s" x="56" y="118">100 ingredient features</text>
+            <rect x="56" y="126" width="250" height="100"/>
+            <path class="grid" d="M81 126V226M106 126V226M131 126V226M156 126V226M181 126V226M206 126V226M231 126V226M256 126V226M281 126V226M56 151H306M56 176H306M56 201H306"/>
+            <text class="s" x="318" y="172">40</text>
+            <text class="s" x="318" y="188">trials</text>
+          </g>
+          <g class="node" data-node="agg"><rect x="40" y="280" width="400" height="76"/><text class="t" x="56" y="305">Domain feature aggregation</text><text class="s" x="56" y="326">Ingredients with similar functional roles</text><text class="s" x="56" y="342">grouped into fewer features</text></g>
+          <g class="node" data-node="tech"><rect x="472" y="280" width="160" height="76"/><text class="t" x="484" y="305">Technologists</text><text class="s" x="484" y="326">Advised which</text><text class="s" x="484" y="342">roles belong together</text></g>
+          <g class="node" data-node="rf">
+            <rect x="40" y="392" width="400" height="60"/>
+            <text class="t" x="56" y="417">Random Forest regression</text>
+            <text class="s" x="56" y="438">Predicts eight target attributes</text>
+            <rect x="302" y="429" width="10" height="10"/><rect x="318" y="429" width="10" height="10"/><rect x="334" y="429" width="10" height="10"/><rect x="350" y="429" width="10" height="10"/><rect x="366" y="429" width="10" height="10"/><rect x="382" y="429" width="10" height="10"/><rect x="398" y="429" width="10" height="10"/><rect x="414" y="429" width="10" height="10"/>
+          </g>
+          <g class="node" data-node="loocv"><rect x="472" y="392" width="160" height="76"/><text class="t" x="484" y="417">Leave-one-out CV</text><text class="s" x="484" y="438">Each trial held out</text><text class="s" x="484" y="454">once and predicted</text></g>
+          <g class="node" data-node="nsga"><rect x="40" y="488" width="400" height="60"/><text class="t" x="56" y="513">NSGA-II search</text><text class="s" x="56" y="534">Multi-objective search that balances the eight targets</text></g>
+          <g class="node" data-node="suggestion"><rect x="40" y="584" width="400" height="60"/><text class="t" x="56" y="609">Suggested starting formulation</text><text class="s" x="56" y="630">A starting point for technologists, not a replacement</text></g>
+          <g class="node" data-node="bench"><rect x="40" y="680" width="400" height="92"/><text class="t" x="56" y="705">One bench test</text><text class="s" x="56" y="726">Measured profile broadly similar to the prediction</text><text class="s" x="56" y="742">Differences consistent with the model’s expected error</text><text class="s" x="56" y="758">One test, so not general validation</text></g>
+        </svg>
+      </div>
+      <figcaption></figcaption>
+    </figure>
+
+    <div class="text">
+      <section data-nodes="data suggestion" aria-labelledby="problem">
+        <h2 id="problem">The problem</h2>
+        <p>New formulations start at the bench from a blank canvas. The aim of this prototype was to give technologists a starting point instead: predict eight target attributes from the ingredients and their dosage, then search for a formulation that comes close to the targets they want.</p>
+        <p>The hard part was the data. There were only 40 past trials to learn from, described by 100 ingredient features. A model with more inputs than examples can fit the training trials almost perfectly and still predict new ones badly, so the <span class="term" data-node="data">shape of the data</span> drove most of the design.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="owned">
+        <h2 id="owned">What I owned</h2>
+        <p>I built the prototype on my own during my Research Technologist rotation, the first assignment of my rotational scholarship program. That covers the feature aggregation, the Random Forest models, the leave-one-out validation and the NSGA-II search.</p>
+        <p>Technologists supplied the domain knowledge for grouping ingredients.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="how">
+        <h2 id="how">How it works</h2>
+        <div class="step" data-nodes="data agg tech">
+          <h3>Shrink the inputs</h3>
+          <p>Rather than feed the model all of the original ingredient features, I grouped ingredients with similar functional roles into <span class="term" data-node="agg">fewer, broader features</span>. I worked out the groups by consulting <span class="term" data-node="tech">technologists</span>, so each group means something to the people who would use the result.</p>
+        </div>
+        <div class="step" data-nodes="rf loocv">
+          <h3>Predict the targets</h3>
+          <p><span class="term" data-node="rf">Random Forest regression</span> predicts the eight target attributes from the grouped features. To estimate how wrong it is likely to be on a new trial, I used <span class="term" data-node="loocv">leave-one-out cross-validation</span>: each trial is held out in turn, the model is trained on the rest, and it predicts the trial it never saw.</p>
+        </div>
+        <div class="step" data-nodes="rf nsga suggestion">
+          <h3>Search for a balanced formulation</h3>
+          <p>With eight targets, improving one attribute can worsen another. <span class="term" data-node="nsga">NSGA-II</span>, an evolutionary multi-objective algorithm, uses the models to search for formulations that balance the desired target attributes and contextual inputs. The output is a <span class="term" data-node="suggestion">suggested starting formulation</span> for technologists to take to the bench.</p>
+        </div>
+        <div class="step" data-nodes="suggestion bench rf">
+          <h3>Check one at the bench</h3>
+          <p>I entered the target profile, and NSGA-II returned its five best candidate formulations. I picked the one whose predicted attributes had the least error against the targets, by RMSE and MAE, together with a technologist’s judgment. That formulation was made and tested. Its <span class="term" data-node="bench">measured profile</span> was broadly similar to the prediction, with differences consistent with the model’s expected error.</p>
+        </div>
+      </section>
+
+      <section data-nodes="" aria-labelledby="decisions">
+        <h2 id="decisions">Decisions</h2>
+        <div class="step" data-nodes="data agg tech">
+          <h3>Grouped features with technologists</h3>
+          <p>100 features against 40 trials is a severe small-sample problem. Grouping ingredients by functional role cut the number of inputs, and doing it with technologists put their knowledge into the model instead of leaving the grouping to an algorithm.</p>
+          <p class="run"><b>Trade-off.</b> The model now reasons about groups, not single ingredients, so it cannot tell apart two ingredients that share a group.</p>
+        </div>
+        <div class="step" data-nodes="rf loocv">
+          <h3>Leave-one-out instead of a held-out test set</h3>
+          <p>With 40 trials, setting aside a separate test set would leave very few trials to learn from and very few to test on. Leave-one-out uses every trial for testing once while training on all the others.</p>
+          <p class="run"><b>Trade-off.</b> It still rests on 40 trials, so the error estimate is itself uncertain. It tells me roughly how far to trust a prediction, not that the model generalizes.</p>
+        </div>
+        <div class="step" data-nodes="nsga suggestion bench">
+          <h3>Framed the output as a starting point</h3>
+          <p>The output is a starting formulation for bench work, not an answer. Physical formulation work stays with the technologists; the prototype only proposes where to begin.</p>
+        </div>
+      </section>
+
+      <section data-nodes="loocv bench" aria-labelledby="evidence">
+        <h2 id="evidence">Evidence</h2>
+        <ul>
+          <li>40 past trials and 100 original ingredient features.</li>
+          <li>Eight target attributes, predicted with Random Forest regression and checked with leave-one-out cross-validation.</li>
+          <li>One formulation suggested by the model was physically tested. Its measured profile was broadly similar to the prediction, with differences consistent with the model’s expected error.</li>
+        </ul>
+        <p class="run"><b>How far to trust it.</b> The dataset is small, and the physical check was a single test. A result within the expected error is encouraging, not proof that the model generalizes.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <span>Joel Lee · Singapore</span>
+    <nav aria-label="Footer">
+      <a href="../../">All systems</a>
+      <button class="theme" type="button" id="theme"></button>
+    </nav>
+  </footer>
+</div>
+<script src="../case-study.js"></script>
+</body>
+</html>

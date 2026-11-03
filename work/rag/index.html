@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic RAG assistant · Joel Lee</title>
+<meta name="description" content="How Joel Lee built, measured and simplified a live retrieval-augmented assistant used by teams across APAC.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../case-study.css">
+<style>
+  /* Hero motif, version B of the animations review (docs/prototypes/archive/animations-review). */
+  .motif-rag-b text { font-family: "Schibsted Grotesk", system-ui, sans-serif; }
+  .motif-rag-b .name { fill: var(--band-muted); font-size: 12px; }
+  .motif-rag-b .name.lead { fill: var(--band-fg); font-weight: 500; }
+  .motif-rag-b .track { stroke: var(--band-faint); stroke-width: 1; }
+  .motif-rag-b .tick { stroke: var(--band-faint); stroke-width: 1; }
+  .motif-rag-b .tick-t, .motif-rag-b .cap { fill: var(--band-muted); font-size: 11px; }
+  .motif-rag-b .dot { fill: var(--band-fg); animation: ragb-travel 900ms var(--ease-in-out) calc(var(--d) * 1ms) both; }
+  .motif-rag-b .dot.lead { fill: var(--band-accent); }
+  .motif-rag-b .ring { fill: none; stroke: var(--band-accent); stroke-width: 1.5; }
+  .motif-rag-b .was { stroke: var(--band-muted); stroke-width: 1; stroke-dasharray: 2 2; }
+  .motif-rag-b .gain { stroke: var(--band-accent); stroke-width: 1.5; }
+  .motif-rag-b .val { fill: var(--band-muted); font-size: 11px; }
+  .motif-rag-b .val.lead { fill: var(--band-accent); font-weight: 500; }
+  @keyframes ragb-travel {
+    0% { opacity: 0; transform: translateX(var(--dx)); }
+    12% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="band"><div class="page">
+  <nav class="top" aria-label="Site">
+    <a class="back" href="../../"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 7H2M6 3L2 7l4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>All systems</a>
+  </nav>
+  <div class="hero">
+    <header class="intro">
+      <h1>Agentic RAG assistant</h1>
+      <p class="used">Used by teams across APAC</p>
+      <p class="lede">Staff ask questions about sensory methods and get answers drawn from 800–1,000 pages of technical literature and internal documents, with the sources shown.</p>
+      <p class="meta">Live. I designed, built, evaluated and deployed it, and I support it in production.</p>
+    </header>
+    <div class="motif motif-rag-b" aria-hidden="true"><svg viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg">
+      <text class="name m-fade" x="24" y="104" style="--d:60">With evaluator</text>
+      <line class="track m-draw" x1="170" y1="100" x2="440" y2="100" style="--d:100"/>
+      <circle class="dot" cx="332" cy="100" r="5" style="--dx:-162.0px; --d:400"/>
+      <text class="val m-fade" x="348" y="90" style="--d:1300">about 0.6</text><text class="name m-fade" x="24" y="168" style="--d:140">Evaluator removed</text>
+      <line class="track m-draw" x1="170" y1="164" x2="440" y2="164" style="--d:180"/>
+      <circle class="dot" cx="332" cy="164" r="5" style="--dx:-162.0px; --d:580"/>
+      <text class="val m-fade" x="348" y="154" style="--d:1480">about 0.6</text><text class="name lead m-fade" x="24" y="232" style="--d:220">Reranker added</text>
+      <line class="track m-draw" x1="170" y1="228" x2="440" y2="228" style="--d:260"/>
+      <line class="was m-fade" x1="332" y1="222" x2="332" y2="234" style="--d:1500"/>
+        <line class="gain m-draw" x1="332" y1="228" x2="359" y2="228" style="--d:1700"/>
+        <circle class="ring m-pop" cx="359" cy="228" r="10" style="--d:1780"/>
+      <circle class="dot lead" cx="359" cy="228" r="5" style="--dx:-189.0px; --d:760"/>
+      <text class="val lead m-fade" x="375" y="218" style="--d:1660">about 0.7</text>
+      <line class="tick m-fade" x1="170" y1="262" x2="170" y2="268" style="--d:300"/>
+      <line class="tick m-fade" x1="440" y1="262" x2="440" y2="268" style="--d:300"/>
+      <text class="tick-t m-fade" x="170" y="284" text-anchor="middle" style="--d:300">0</text>
+      <text class="tick-t m-fade" x="440" y="284" text-anchor="middle" style="--d:300">1</text>
+      <text class="cap m-fade" x="24" y="324" style="--d:1900">Precision, recall and nDCG@8 each, on synthetic, LLM-labeled questions</text>
+    </svg></div>
+  </div>
+</div></div>
+
+<div class="page">
+  <main class="cs">
+    <figure class="fig">
+      <div class="frame">
+        <svg viewBox="0 0 652 700" role="img" aria-labelledby="arch-title">
+          <title id="arch-title">Architecture: a question goes to a clarifier, which routes it to one of three retrievers. Each runs hybrid search and cross-encoder reranking, with models served from a local GPU. A generator answers with sources and can search again. Langfuse records each run. An earlier evaluator agent was removed.</title>
+
+          <g class="edge" data-link="question clarifier"><path d="M240 56V92"/><path class="head" d="M235.5 92L240 100L244.5 92Z"/></g>
+          <g class="edge" data-link="clarifier retrievers">
+            <path d="M240 160V176H102.7V188M240 176V188M240 176H377.3V188"/>
+            <path class="head" d="M98.2 188L102.7 196L107.2 188ZM235.5 188L240 196L244.5 188ZM372.8 188L377.3 196L381.8 188Z"/>
+          </g>
+          <g class="edge" data-link="retrievers hybrid">
+            <path d="M102.7 256V288M240 256V288M377.3 256V288"/>
+            <path class="head" d="M98.2 288L102.7 296L107.2 288ZM235.5 288L240 296L244.5 288ZM372.8 288L377.3 296L381.8 288Z"/>
+          </g>
+          <g class="edge" data-link="hybrid rerank"><path d="M240 356V388"/><path class="head" d="M235.5 388L240 396L244.5 388Z"/></g>
+          <g class="edge" data-link="rerank generator"><path d="M240 456V500"/><path class="head" d="M235.5 500L240 508L244.5 500Z"/></g>
+          <g class="edge removed" data-link="rerank evaluator"><path d="M240 482H464"/><path class="head" d="M464 477.5L472 482L464 486.5Z"/></g>
+          <g class="edge aside" data-link="gpu hybrid"><path d="M472 326H448"/><path class="head" d="M448 321.5L440 326L448 330.5Z"/></g>
+          <g class="edge aside" data-link="gpu rerank"><path d="M472 426H448"/><path class="head" d="M448 421.5L440 426L448 430.5Z"/></g>
+          <g class="edge" data-link="generator hybrid"><path d="M40 538H20V326H32"/><path class="head" d="M32 321.5L40 326L32 330.5Z"/></g>
+          <g class="edge" data-link="generator answer"><path d="M240 568V600"/><path class="head" d="M235.5 600L240 608L244.5 600Z"/></g>
+          <g class="edge aside" data-link="answer langfuse"><path d="M440 638H464"/><path class="head" d="M464 633.5L472 638L464 642.5Z"/></g>
+
+          <g class="node" data-node="question"><rect x="160" y="16" width="160" height="40"/><text class="t" x="240" y="41" text-anchor="middle">Question</text></g>
+          <g class="node" data-node="clarifier"><rect x="40" y="100" width="400" height="60"/><text class="t" x="56" y="125">Clarifier</text><text class="s" x="56" y="146">Asks follow-ups, records the answers, picks a collection</text></g>
+          <g class="node" data-node="retrievers"><rect x="40" y="196" width="125.3" height="60"/><text class="t" x="52" y="221">Retriever</text><text class="s" x="52" y="242">Collection 1</text></g>
+          <g class="node" data-node="retrievers"><rect x="177.3" y="196" width="125.3" height="60"/><text class="t" x="189.3" y="221">Retriever</text><text class="s" x="189.3" y="242">Collection 2</text></g>
+          <g class="node" data-node="retrievers"><rect x="314.7" y="196" width="125.3" height="60"/><text class="t" x="326.7" y="221">Retriever</text><text class="s" x="326.7" y="242">Collection 3</text></g>
+          <g class="node" data-node="hybrid"><rect x="40" y="296" width="400" height="60"/><text class="t" x="56" y="321">Hybrid search</text><text class="s" x="56" y="342">BM25 keywords and vectors</text></g>
+          <g class="node" data-node="rerank"><rect x="40" y="396" width="400" height="60"/><text class="t" x="56" y="421">Cross-encoder rerank</text><text class="s" x="56" y="442">Reorders the combined results</text></g>
+          <g class="node" data-node="generator"><rect x="40" y="508" width="400" height="60"/><text class="t" x="56" y="533">Generator</text><text class="s" x="56" y="554">API model; can search again with a rewritten query</text></g>
+          <g class="node" data-node="answer"><rect x="40" y="608" width="400" height="60"/><text class="t" x="56" y="633">Answer with sources</text><text class="s" x="56" y="654">The documents it drew on, listed with every answer</text></g>
+          <g class="node" data-node="gpu"><rect x="472" y="296" width="160" height="140"/><text class="t" x="484" y="321">Local GPU</text><text class="s" x="484" y="342">Embeddings and</text><text class="s" x="484" y="358">reranker behind one</text><text class="s" x="484" y="374">endpoint, loaded when</text><text class="s" x="484" y="390">the app opens</text></g>
+          <g class="node removed" data-node="evaluator"><rect x="472" y="452" width="160" height="60"/><text class="t" x="484" y="477">Evaluator agent</text><line x1="484" y1="472" x2="596" y2="472"/><text class="s" x="484" y="498">Removed after testing</text></g>
+          <g class="node" data-node="langfuse"><rect x="472" y="590" width="160" height="96"/><text class="t" x="484" y="615">Langfuse</text><text class="s" x="484" y="636">Traces every run</text><text class="s" x="484" y="652">LLM judge</text><text class="s" x="484" y="668">Thumbs feedback</text></g>
+        </svg>
+      </div>
+      <figcaption></figcaption>
+    </figure>
+
+    <div class="text">
+      <section data-nodes="" aria-labelledby="problem">
+        <h2 id="problem">The problem</h2>
+        <p>Sensory methods were scattered across long technical literature, internal documents and legacy slide decks. New colleagues had to find them for the first time, and busy ones had to recall them quickly.</p>
+        <p>The material comes in three kinds: textbooks, internal knowledge (including the slide decks) and a third type of document. A single retriever over all of it often returned chunks from the wrong kind, so I split it into three collections.</p>
+        <p>People also describe products in everyday words, while the team works in a fixed sensory vocabulary, its lexicon. New joiners don’t know the lexicon yet, and experienced colleagues still need to recall which terms fit, so a useful answer often needs that translation too.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="owned">
+        <h2 id="owned">What I owned</h2>
+        <p>All of it. I designed, built, evaluated and deployed the assistant, and I support it in production. That covers the LangGraph flow, the retrieval pipeline, the Shiny for Python interface, the evaluation set, the tracing and the Podman container it runs in.</p>
+        <p>The search models run on a local inference stack, which I also set up and which has its own case study.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="how">
+        <h2 id="how">How it works</h2>
+        <div class="step" data-nodes="question clarifier retrievers">
+          <h3>Clarify and route</h3>
+          <p>A <span class="term" data-node="clarifier">clarifier</span> reads the question and, when context is missing, asks follow-up questions and waits for the answers. It writes what it learns into structured fields in the graph’s state. Later steps read those fields, and the clarifier uses them to send the question to one of <span class="term" data-node="retrievers">three retrievers</span>, so each search stays inside one kind of document.</p>
+        </div>
+        <div class="step" data-nodes="retrievers hybrid rerank gpu">
+          <h3>Retrieve</h3>
+          <p>Each retriever has its own collection and runs the same pipeline: <span class="term" data-node="hybrid">BM25 keyword search and vector search,</span> then a <span class="term" data-node="rerank">cross-encoder</span> reranks the combined results.</p>
+          <p>The embedding model and the reranker run on a <span class="term" data-node="gpu">local GPU</span>, behind one OpenAI-compatible endpoint. The app sends a warm-up request when it opens, so the 40–60 second model load happens before the first question instead of during it to reduce user perceived latency.</p>
+        </div>
+        <div class="step" data-nodes="generator answer hybrid">
+          <h3>Answer</h3>
+          <p>The <span class="term" data-node="generator">generator</span> drafts an answer from the reranked chunks. When the draft needs more, it calls the retriever again with a rewritten or expanded query. Every answer lists the documents it drew on, so people can check the basis before they rely on it.</p>
+          <p>A separate lexicon search, also reachable from the chat with a slash command, combines embeddings with keyword search to map everyday descriptive words to the team’s lexicon. </p>
+        </div>
+        <div class="step" data-nodes="langfuse generator answer">
+          <h3>Evals</h3>
+          <p>Self-hosted <span class="term" data-node="langfuse">Langfuse</span> traces every run. A LLM judge reads the question, the retrieved chunks and the answer, and labels the answer grounded, somewhat grounded or not grounded; it asks three different models and combines the results. Users can rate answers with a thumbs up or down, stored next to the trace. Together they show when answers go wrong, without relying on anecdotes.</p>
+        </div>
+      </section>
+
+      <section data-nodes="" aria-labelledby="decisions">
+        <h2 id="decisions">Decisions</h2>
+        <div class="step" data-nodes="evaluator rerank">
+          <h3>Removed the evaluator agent</h3>
+          <p>An earlier version had an LLM agent that judged each retrieved chunk before generation. It sounds good in theory, but it added extra model calls. So I tested whether it earned them: three pipelines on the same questions, shown under Evidence. Taking it out (pipeline 1 to 2) left retrieval about where it was, so I removed it. A cross-encoder reranker (pipeline 3) then gave the gain.</p>
+          <p class="run"><b>Result.</b> Removing it took its LLM calls out of every query, cutting latency and token cost. The lesson I took: a cheaper, deterministic component beat an extra LLM step, so measure before adding agents.</p>
+        </div>
+        <div class="step" data-nodes="clarifier retrievers">
+          <h3>Routed each question to one collection</h3>
+          <p>One retriever over mixed sources kept returning chunks from the wrong kind of document. Rather than ask users to know where information lives, the clarifier now routes each question for them.</p>
+        </div>
+        <div class="step" data-nodes="gpu generator langfuse">
+          <h3>Local models for search, an API for answers</h3>
+          <p>Embedding and reranking run on local hardware, so they carry no per-call fee. The generator and the judge run on an API, because writing and grading answers is where a frontier model earns its cost.</p>
+          <p class="run"><b>Trade-off.</b> The API step sends the question and the top-ranked passages outside the network, and the provider sets the price. I accepted that for the two steps where model intelligence matters most in the pipeline.</p>
+        </div>
+      </section>
+
+      <section data-nodes="hybrid rerank evaluator" aria-labelledby="evidence">
+        <h2 id="evidence">Evidence</h2>
+        <p>I compared three retrieval pipelines on the same questions. All three used the routed collections and started from hybrid search.</p>
+        <ol class="dots" aria-label="Retrieval quality by pipeline, on a scale from 0 to 1">
+          <li><span class="name">ColBERT rerank and evaluator agent<small>Pipeline 1</small></span><span class="track"><i style="left: 60%"></i><b style="left: 60%">about 0.6</b></span></li>
+          <li><span class="name">ColBERT rerank only<small>Pipeline 2</small></span><span class="track"><i style="left: 60%"></i><b style="left: 60%">about 0.6</b></span></li>
+          <li><span class="name">Cross-encoder rerank<small>Pipeline 3, now live</small></span><span class="track"><i class="on" style="left: 70%"></i><b style="left: 70%">about 0.7</b></span></li>
+        </ol>
+        <div class="scale" aria-hidden="true"><span></span><span><span>0</span><span>0.5</span><span>1</span></span></div>
+        <p>Removing the evaluator agent (pipeline 1 to 2) left precision@8, recall@8 and nDCG@8 at about 0.6. Swapping ColBERT for a cross-encoder (pipeline 2 to 3) raised each to about 0.7.</p>
+        <p class="run"><b>How far to trust it.</b> The set is 72 synthetic, LLM-labeled questions, written by an LLM in the voices of three personas derived with Ragas. Questions written from the documents reuse their wording, so the absolute scores likely run high; the comparison between pipelines is the result that matters.</p>
+        <p class="run"><b>What users say.</b> Stakeholders say methods and the team’s lexicon are now easier to find, and that the assistant gives a quick overview of which sensory test protocols are available and which lexicon to use for a project.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <span>Joel Lee · Singapore</span>
+    <nav aria-label="Footer">
+      <a href="../../">All systems</a>
+      <button class="theme" type="button" id="theme"></button>
+    </nav>
+  </footer>
+</div>
+<script src="../case-study.js"></script>
+</body>
+</html>

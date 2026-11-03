@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Survey NLP app · Joel Lee</title>
+<meta name="description" content="How Joel Lee built an application that translates and analyzes multilingual survey answers, cutting a first-pass review from 1–2 working days to under an hour.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../case-study.css">
+<style>
+  /* Before/after time chart inside the pinned figure */
+  .chart .ct { fill: var(--ink); font-size: 15px; font-weight: 700; }
+  .chart .sub { fill: var(--ink-3); font-size: 12.5px; }
+  .chart .val { fill: var(--ink-2); font-size: 12.5px; }
+  .chart .val.on { fill: var(--vector); font-weight: 700; }
+  .chart .axis { stroke: var(--ink-3); stroke-width: 1; fill: none; }
+  .chart .cap { stroke: var(--vector); stroke-width: 1.5; }
+</style>
+<style>
+  /* Hero motif, version B of the animations review (docs/prototypes/archive/animations-review). */
+  .motif-nlp-b text { font-family: "Schibsted Grotesk", system-ui, sans-serif; font-size: 11px; fill: var(--band-muted); }
+  .motif-nlp-b .row { font-size: 12px; fill: var(--band-fg); font-weight: 500; }
+  .motif-nlp-b .axis, .motif-nlp-b .tick { stroke: var(--band-faint); stroke-width: 1; }
+  .motif-nlp-b .low { fill: var(--band-fg); }
+  .motif-nlp-b .now { fill: var(--band-accent); transform-origin: left center; animation: nlpb-compress 760ms var(--ease-in-out) 980ms both; }
+  .motif-nlp-b .now-label { fill: var(--band-accent); font-size: 12px; font-weight: 500; }
+  @keyframes nlpb-compress { 0% { transform: scaleX(16); opacity: 0; } 12% { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="band"><div class="page">
+  <nav class="top" aria-label="Site">
+    <a class="back" href="../../"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 7H2M6 3L2 7l4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>All systems</a>
+  </nav>
+  <div class="hero">
+    <header class="intro">
+      <h1>Survey NLP app</h1>
+      <p class="lede">A first pass through 4,000 multilingual survey answers now takes under an hour, down from 1–2 working days.</p>
+      <p class="meta">A working internal application with a small group of users so far.</p>
+    </header>
+    <div class="motif motif-nlp-b" aria-hidden="true"><svg viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg">
+  <text class="row m-fade" x="40" y="118" style="--d:100">Before</text>
+  <text class="m-fade" x="440" y="118" text-anchor="end" style="--d:700">1–2 working days</text>
+  <rect class="low m-draw" x="40" y="128" width="400" height="18" style="--d:240"/>
+  <text class="row m-fade" x="40" y="198" style="--d:900">With the app</text>
+  <rect class="now" x="40" y="208" width="25" height="18"/>
+  <text class="now-label m-fade" x="75" y="221" style="--d:1760">under an hour</text>
+  <line class="axis m-draw" x1="40" y1="262" x2="440" y2="262" style="--d:120"/>
+  <g class="m-fade" style="--d:180"><line class="tick" x1="40" y1="262" x2="40" y2="268"/><text x="40" y="284" text-anchor="middle">0</text></g><g class="m-fade" style="--d:220"><line class="tick" x1="240" y1="262" x2="240" y2="268"/><text x="240" y="284" text-anchor="middle">1 day</text></g><g class="m-fade" style="--d:260"><line class="tick" x1="440" y1="262" x2="440" y2="268"/><text x="440" y="284" text-anchor="middle">2 days</text></g>
+  <text class="m-fade" x="40" y="318" style="--d:1880">The axis assumes an 8-hour working day.</text>
+</svg></div>
+  </div>
+</div></div>
+
+<div class="page">
+  <main class="cs">
+    <figure class="fig">
+      <div class="frame">
+        <svg viewBox="0 0 652 612" role="img" aria-labelledby="fig-title">
+          <title id="fig-title">Chart: first-pass review of 4,000 survey responses took 1 to 2 working days before the app, and no more than one hour with it. Below, the pipeline: upload a survey file, choose the text field, translate into English locally, score sentiment with entropy weighting, find bigrams and trigrams, and compare markets, age groups and segments.</title>
+
+          <g class="chart">
+            <text class="ct" x="16" y="24">First-pass review of 4,000 responses</text>
+            <text class="sub" x="16" y="44">Translation, sentiment analysis and review; estimated working time</text>
+
+            <g data-node="before">
+              <text class="ct" x="16" y="92">Before</text>
+              <rect x="160" y="76" width="460" height="22" fill="var(--ink-3)"/>
+              <text class="val" x="160" y="120">1–2 working days (a range)</text>
+            </g>
+
+            <g data-node="after">
+              <text class="ct" x="16" y="162">With the app</text>
+              <rect x="160" y="146" width="28.75" height="22" fill="var(--vector)"/>
+              <line class="cap" x1="188.75" y1="140" x2="188.75" y2="174"/>
+              <text class="val on" x="200" y="162">No more than 1 hour (upper bound)</text>
+            </g>
+
+            <g data-node="time">
+              <path class="axis" d="M160 200.5H620M160.5 200V206M390.5 200V206M619.5 200V206"/>
+              <text class="sub" x="160" y="222" text-anchor="middle">0</text>
+              <text class="sub" x="390" y="222" text-anchor="middle">1 day</text>
+              <text class="sub" x="620" y="222" text-anchor="end">2 days</text>
+              <text class="sub" x="16" y="248">The axis assumes an 8-hour working day.</text>
+            </g>
+          </g>
+
+          <g class="edge" data-link="upload field"><path d="M326 332V340"/><path class="head" d="M321.5 340L326 348L330.5 340Z"/></g>
+          <g class="edge" data-link="field translate"><path d="M326 384V392"/><path class="head" d="M321.5 392L326 400L330.5 392Z"/></g>
+          <g class="edge" data-link="translate sentiment"><path d="M326 436V444"/><path class="head" d="M321.5 444L326 452L330.5 444Z"/></g>
+          <g class="edge" data-link="sentiment ngrams"><path d="M326 488V496"/><path class="head" d="M321.5 496L326 504L330.5 496Z"/></g>
+          <g class="edge" data-link="ngrams compare"><path d="M326 540V548"/><path class="head" d="M321.5 548L326 556L330.5 548Z"/></g>
+
+          <g class="node" data-node="upload"><rect x="16" y="296" width="620" height="36"/><text class="t" x="28" y="319">Upload</text><text class="s" x="200" y="319">A survey file with open-ended answers</text></g>
+          <g class="node" data-node="field"><rect x="16" y="348" width="620" height="36"/><text class="t" x="28" y="371">Choose text field</text><text class="s" x="200" y="371">The other fields become filters</text></g>
+          <g class="node" data-node="translate"><rect x="16" y="400" width="620" height="36"/><text class="t" x="28" y="423">Translate</text><text class="s" x="200" y="423">Local bulk translation into English</text></g>
+          <g class="node" data-node="sentiment"><rect x="16" y="452" width="620" height="36"/><text class="t" x="28" y="475">Sentiment</text><text class="s" x="200" y="475">Positive, neutral, negative; uncertain predictions count less</text></g>
+          <g class="node" data-node="ngrams"><rect x="16" y="504" width="620" height="36"/><text class="t" x="28" y="527">Bigrams, trigrams</text><text class="s" x="200" y="527">Phrases kept by collocation thresholds</text></g>
+          <g class="node" data-node="compare"><rect x="16" y="556" width="620" height="36"/><text class="t" x="28" y="579">Compare</text><text class="s" x="200" y="579">Markets, age groups and demographic segments</text></g>
+        </svg>
+      </div>
+      <figcaption></figcaption>
+    </figure>
+
+    <div class="text">
+      <section data-nodes="before time upload" aria-labelledby="problem">
+        <h2 id="problem">The problem</h2>
+        <p>Market-insights teams run surveys across regional markets, so the open-ended answers come back in several languages.</p>
+        <p>Before anyone could read for themes, the answers had to be translated, analyzed for sentiment and reviewed which took days.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="owned">
+        <h2 id="owned">What I owned</h2>
+        <p>I developed the application: a Shiny for Python interface with several analysis pages, covering file upload, translation, sentiment scoring, phrase extraction and the comparison views.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="how">
+        <h2 id="how">How it works</h2>
+        <div class="step" data-nodes="upload field">
+          <h3>Upload and pick the text</h3>
+          <p>A user <span class="term" data-node="upload">uploads a survey file</span> and chooses which field holds the open-ended text. The app treats <span class="term" data-node="field">every other field as a filter</span>, so the same file can be sliced by market, age group or segment later.</p>
+        </div>
+        <div class="step" data-nodes="translate">
+          <h3>Translate in bulk</h3>
+          <p>The app <span class="term" data-node="translate">translates the answers into English</span> in one bulk pass, with a model running locally. Everything after this step works on one language.</p>
+        </div>
+        <div class="step" data-nodes="sentiment">
+          <h3>Score sentiment</h3>
+          <p>Each answer is classified as positive, neutral or negative. When the app combines them into an aggregate score, it uses the entropy of each prediction’s class probabilities to <span class="term" data-node="sentiment">give uncertain predictions less weight</span>. An answer the model is unsure about moves the aggregate less than a clear one.</p>
+        </div>
+        <div class="step" data-nodes="ngrams compare">
+          <h3>Find phrases and compare groups</h3>
+          <p>The app builds <span class="term" data-node="ngrams">bigrams and trigrams</span> on the fly, keeping the word pairs and triples that pass collocation thresholds. Users then <span class="term" data-node="compare">compare open-ended reactions</span> across markets, age groups and demographic segments.</p>
+        </div>
+      </section>
+
+      <section data-nodes="" aria-labelledby="decisions">
+        <h2 id="decisions">Decisions</h2>
+        <div class="step" data-nodes="sentiment">
+          <h3>Weighted sentiment by confidence</h3>
+          <p>A plain average counts every prediction equally, including ones that have similar probability distributions. I used entropy-weighted aggregation instead, so the overall score leans on the predictions the model is confident about.</p>
+          <p class="run"><b>Trade-off.</b> It changed the results only slightly, mostly by toning down extremes: most scores land between 0.3 and 0.7 on the 0-to-1 scale. This is a trade-off I accept to feel more confident in the reported sentiment score.</p>
+        </div>
+        <div class="step" data-nodes="field compare">
+          <h3>Let the file decide the filters</h3>
+          <p>Rather than fix a survey layout, the app asks which field is the text and turns the rest into filters. The filters are what the market, age and segment comparisons run on.</p>
+        </div>
+        <div class="step" data-nodes="translate">
+          <h3>Translate everything first</h3>
+          <p>All answers are translated into English in bulk before any analysis, so sentiment and phrase extraction run on a single language for easier user analysis and tracing later on.</p>
+        </div>
+      </section>
+
+      <section data-nodes="before after time" aria-labelledby="evidence">
+        <h2 id="evidence">Evidence</h2>
+        <p>For a large multilingual survey of about 4,000 responses, the first pass of translation, sentiment analysis and review went from an estimated <span class="term" data-node="before">1–2 working days</span> to <span class="term" data-node="after">no more than one hour</span>.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <span>Joel Lee · Singapore</span>
+    <nav aria-label="Footer">
+      <a href="../../">All systems</a>
+      <button class="theme" type="button" id="theme"></button>
+    </nav>
+  </footer>
+</div>
+<script src="../case-study.js"></script>
+</body>
+</html>

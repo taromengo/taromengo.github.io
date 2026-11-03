@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product record platform · Joel Lee</title>
+<meta name="description" content="How Joel Lee replaced 50 spreadsheets with a PostgreSQL database and a search app that cut a typical record lookup from an hour to 5–15 minutes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../case-study.css">
+<style>
+  /* Time chart drawn inside the pinned figure */
+  .chart .ct { fill: var(--ink); font-size: 15px; font-weight: 700; }
+  .chart .cs { fill: var(--ink-3); font-size: 12.5px; }
+  .chart .lab { fill: var(--ink); font-size: 14px; font-weight: 500; }
+  .chart .axis { stroke: var(--ink-3); stroke-width: 1; fill: none; }
+  .chart .grid { stroke: var(--hair); stroke-width: 1; stroke-dasharray: 3 3; }
+  .chart .bar { fill: var(--ink-3); }
+  .chart .range { fill: var(--vector); }
+  .chart .after .lab { fill: var(--vector); }
+  .sep { stroke: var(--hair); stroke-width: 1; }
+  .sub { fill: var(--ink-3); font-size: 12.5px; }
+</style>
+<style>
+  /* Hero motif, version B of the animations review (docs/prototypes/archive/animations-review). */
+  .motif-records-b text { font-family: "Schibsted Grotesk", system-ui, sans-serif; font-size: 11px; fill: var(--band-muted); }
+  .motif-records-b .row { font-size: 12px; fill: var(--band-fg); font-weight: 500; }
+  /* Ticks are placed by their transform attribute around the dial centre, so they need the view box, not their own box. */
+  .motif-records-b .track, .motif-records-b .tick { transform-box: view-box; transform-origin: 0 0; }
+  .motif-records-b .track { fill: var(--band-faint); }
+  .motif-records-b .tick.fg { fill: var(--band-fg); }
+  .motif-records-b .tick.ac { fill: var(--band-accent); }
+  .motif-records-b .tick.soft { fill-opacity: 0.4; }
+  .motif-records-b .hub.fg { fill: var(--band-fg); }
+  .motif-records-b .hub.ac { fill: var(--band-accent); }
+  .motif-records-b .hand { stroke-width: 1.5; transform-box: view-box; }
+  .motif-records-b .hand.fg { stroke: var(--band-fg); animation: recordsb-sweep-before 900ms linear 200ms both; }
+  .motif-records-b .hand.ac { stroke: var(--band-accent); animation: recordsb-sweep-after 400ms var(--ease-out) 1250ms both; }
+  .motif-records-b .val-ac { fill: var(--band-accent); font-size: 12px; font-weight: 500; }
+  .motif-records-b .val { fill: var(--band-fg); font-size: 12px; font-weight: 500; }
+  @keyframes recordsb-sweep-before { from { transform: rotate(0deg); } }
+  @keyframes recordsb-sweep-after { from { transform: rotate(0deg); } }
+</style>
+</head>
+<body>
+<div class="band"><div class="page">
+  <nav class="top" aria-label="Site">
+    <a class="back" href="../../"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 7H2M6 3L2 7l4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>All systems</a>
+  </nav>
+  <div class="hero">
+    <header class="intro">
+      <h1>Product record platform</h1>
+      <p class="used">Used by regional teams in APAC</p>
+      <p class="lede">Finding and comparing product records now takes <span style="white-space: nowrap">5–15 minutes</span> instead of an hour.</p>
+      <p class="meta">Produced end to end, from stakeholder interviews to the database and the frontend.</p>
+    </header>
+    <div class="motif motif-records-b" aria-hidden="true"><svg viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg">
+  <text class="row m-fade" x="130" y="58" text-anchor="middle" style="--d:40">Before</text>
+  <text class="row m-fade" x="350" y="58" text-anchor="middle" style="--d:1150">With search</text>
+  <g class="m-fade" style="--d:60"><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(3)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(9)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(15)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(21)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(27)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(33)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(39)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(45)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(51)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(57)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(63)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(69)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(75)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(81)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(87)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(93)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(99)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(105)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(111)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(117)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(123)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(129)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(135)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(141)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(147)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(153)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(159)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(165)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(171)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(177)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(183)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(189)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(195)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(201)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(207)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(213)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(219)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(225)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(231)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(237)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(243)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(249)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(255)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(261)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(267)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(273)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(279)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(285)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(291)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(297)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(303)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(309)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(315)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(321)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(327)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(333)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(339)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(345)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(351)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(357)"/></g><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(3)" style="--d:200"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(9)" style="--d:215"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(15)" style="--d:230"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(21)" style="--d:245"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(27)" style="--d:260"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(33)" style="--d:275"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(39)" style="--d:290"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(45)" style="--d:305"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(51)" style="--d:320"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(57)" style="--d:335"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(63)" style="--d:350"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(69)" style="--d:365"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(75)" style="--d:380"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(81)" style="--d:395"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(87)" style="--d:410"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(93)" style="--d:425"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(99)" style="--d:440"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(105)" style="--d:455"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(111)" style="--d:470"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(117)" style="--d:485"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(123)" style="--d:500"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(129)" style="--d:515"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(135)" style="--d:530"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(141)" style="--d:545"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(147)" style="--d:560"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(153)" style="--d:575"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(159)" style="--d:590"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(165)" style="--d:605"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(171)" style="--d:620"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(177)" style="--d:635"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(183)" style="--d:650"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(189)" style="--d:665"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(195)" style="--d:680"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(201)" style="--d:695"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(207)" style="--d:710"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(213)" style="--d:725"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(219)" style="--d:740"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(225)" style="--d:755"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(231)" style="--d:770"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(237)" style="--d:785"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(243)" style="--d:800"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(249)" style="--d:815"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(255)" style="--d:830"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(261)" style="--d:845"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(267)" style="--d:860"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(273)" style="--d:875"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(279)" style="--d:890"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(285)" style="--d:905"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(291)" style="--d:920"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(297)" style="--d:935"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(303)" style="--d:950"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(309)" style="--d:965"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(315)" style="--d:980"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(321)" style="--d:995"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(327)" style="--d:1010"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(333)" style="--d:1025"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(339)" style="--d:1040"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(345)" style="--d:1055"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(351)" style="--d:1070"/><rect class="tick m-fade fg" x="-1.25" y="-76" width="2.5" height="12" transform="translate(130 160) rotate(357)" style="--d:1085"/>
+      <line class="hand fg" x1="130" y1="160" x2="130" y2="104" style="transform-origin:130px 160px; transform: rotate(360deg)"/>
+      <circle class="hub fg" cx="130" cy="160" r="3.5"/>
+  <g class="m-fade" style="--d:60"><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(3)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(9)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(15)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(21)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(27)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(33)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(39)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(45)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(51)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(57)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(63)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(69)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(75)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(81)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(87)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(93)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(99)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(105)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(111)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(117)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(123)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(129)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(135)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(141)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(147)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(153)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(159)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(165)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(171)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(177)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(183)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(189)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(195)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(201)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(207)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(213)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(219)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(225)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(231)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(237)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(243)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(249)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(255)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(261)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(267)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(273)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(279)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(285)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(291)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(297)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(303)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(309)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(315)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(321)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(327)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(333)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(339)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(345)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(351)"/><rect class="track" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(357)"/></g><rect class="tick m-fade ac" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(3)" style="--d:1250"/><rect class="tick m-fade ac" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(9)" style="--d:1276"/><rect class="tick m-fade ac" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(15)" style="--d:1302"/><rect class="tick m-fade ac" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(21)" style="--d:1328"/><rect class="tick m-fade ac" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(27)" style="--d:1354"/><rect class="tick m-fade ac soft" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(33)" style="--d:1380"/><rect class="tick m-fade ac soft" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(39)" style="--d:1406"/><rect class="tick m-fade ac soft" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(45)" style="--d:1432"/><rect class="tick m-fade ac soft" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(51)" style="--d:1458"/><rect class="tick m-fade ac soft" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(57)" style="--d:1484"/><rect class="tick m-fade ac soft" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(63)" style="--d:1510"/><rect class="tick m-fade ac soft" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(69)" style="--d:1536"/><rect class="tick m-fade ac soft" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(75)" style="--d:1562"/><rect class="tick m-fade ac soft" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(81)" style="--d:1588"/><rect class="tick m-fade ac soft" x="-1.25" y="-76" width="2.5" height="12" transform="translate(350 160) rotate(87)" style="--d:1614"/>
+      <line class="hand ac" x1="350" y1="160" x2="350" y2="104" style="transform-origin:350px 160px; transform: rotate(90deg)"/>
+      <circle class="hub ac" cx="350" cy="160" r="3.5"/>
+  <text class="val m-fade" x="130" y="268" text-anchor="middle" style="--d:1120">an hour</text>
+  <text class="val-ac m-fade" x="350" y="268" text-anchor="middle" style="--d:1660">5–15 minutes</text>
+</svg></div>
+  </div>
+</div></div>
+
+<div class="page">
+  <main class="cs">
+    <figure class="fig">
+      <div class="frame">
+        <svg viewBox="0 0 652 680" role="img" aria-labelledby="fig-title">
+          <title id="fig-title">Top: a typical record-location and comparison task took one hour before the platform and takes 5 to 15 minutes after it. Below: 50 Excel datasets go through staging tables with cleaning and consistency checks into a PostgreSQL schema of 13 tables, reached through controlled accounts and pooled connections by a search app for non-technical users.</title>
+
+          <g class="chart">
+            <text class="ct" x="16" y="30">A typical record-location and comparison task</text>
+            <text class="cs" x="16" y="50">Time per task, my estimate</text>
+
+            <path class="grid" d="M225 66V186M330 66V186M435 66V186M540 66V186"/>
+
+            <g data-node="before">
+              <text class="ct" x="16" y="100">Before</text>
+              <text class="cs" x="16" y="117">Excel files</text>
+              <rect class="bar" x="120" y="88" width="420" height="24"/>
+              <text class="lab" x="552" y="105">1 hour</text>
+            </g>
+
+            <g class="after" data-node="after">
+              <text class="ct" x="16" y="152">After</text>
+              <text class="cs" x="16" y="169">Search app</text>
+              <rect class="range" x="120" y="140" width="105" height="24"/>
+              <text class="lab" x="237" y="157">5–15 minutes</text>
+            </g>
+
+            <path class="axis" d="M120 186H540M120 186V192M225 186V192M330 186V192M435 186V192M540 186V192"/>
+            <text class="cs" x="120" y="208" text-anchor="middle">0</text>
+            <text class="cs" x="225" y="208" text-anchor="middle">15</text>
+            <text class="cs" x="330" y="208" text-anchor="middle">30</text>
+            <text class="cs" x="435" y="208" text-anchor="middle">45</text>
+            <text class="cs" x="540" y="208" text-anchor="middle">60</text>
+            <text class="cs" x="330" y="228" text-anchor="middle">Minutes</text>
+          </g>
+
+          <path class="sep" d="M16 254H636"/>
+          <text class="sub" x="16" y="278">Behind the search</text>
+
+          <g class="edge" data-link="sources staging"><path d="M246 342V354"/><path class="head" d="M241.5 354L246 362L250.5 354Z"/></g>
+          <g class="edge" data-link="staging schema"><path d="M246 414V426"/><path class="head" d="M241.5 426L246 434L250.5 426Z"/></g>
+          <g class="edge" data-link="schema access"><path d="M246 486V498"/><path class="head" d="M241.5 498L246 506L250.5 498Z"/></g>
+          <g class="edge" data-link="access app"><path d="M246 558V570"/><path class="head" d="M241.5 570L246 578L250.5 570Z"/></g>
+          <g class="edge" data-link="app users"><path d="M452 604H468"/><path class="head" d="M468 599.5L476 604L468 608.5Z"/></g>
+
+          <g class="node" data-node="sources"><rect x="40" y="290" width="412" height="52"/><text class="t" x="56" y="312">50 Excel datasets</text><text class="s" x="56" y="331">Product and evaluated-sample records</text></g>
+          <g class="node" data-node="staging"><rect x="40" y="362" width="412" height="52"/><text class="t" x="56" y="384">Staging tables</text><text class="s" x="56" y="403">Cleaning and checks, partly automated by agent skills</text></g>
+          <g class="node" data-node="schema"><rect x="40" y="434" width="412" height="52"/><text class="t" x="56" y="456">PostgreSQL, 13 tables</text><text class="s" x="56" y="475">One-to-many, many-to-one and many-to-many links</text></g>
+          <g class="node" data-node="access"><rect x="40" y="506" width="412" height="52"/><text class="t" x="56" y="528">Controlled access</text><text class="s" x="56" y="547">Database accounts; pooled connections via SQLAlchemy</text></g>
+          <g class="node" data-node="app"><rect x="40" y="578" width="412" height="52"/><text class="t" x="56" y="600">Search app</text><text class="s" x="56" y="619">Search, compare over time, download; no SQL</text></g>
+          <g class="node" data-node="users"><rect x="476" y="578" width="160" height="52"/><text class="t" x="488" y="600">Users</text></g>
+        </svg>
+      </div>
+      <figcaption></figcaption>
+    </figure>
+
+    <div class="text">
+      <section data-nodes="sources before" aria-labelledby="problem">
+        <h2 id="problem">The problem</h2>
+        <p>Product and evaluated-sample records were spread across <span class="term" data-node="sources">50 Excel datasets</span>. People could not easily tell which file held what they needed.</p>
+        <p>Comparing records across projects, regions and time was harder still. A typical lookup and comparison took <span class="term" data-node="before">an estimated hour</span>.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="owned">
+        <h2 id="owned">What I owned</h2>
+        <p>I led the project end to end. I found and interviewed the stakeholders, designed the schema, built the ingestion and the migration from Excel, set up database access, and built the app people use.</p>
+      </section>
+
+      <section data-nodes="" aria-labelledby="how">
+        <h2 id="how">How it works</h2>
+        <div class="step" data-nodes="sources staging">
+          <h3>Ingest and clean</h3>
+          <p>Data from the Excel files lands first in <span class="term" data-node="staging">staging tables</span>. There it is cleaned and checked for consistency before it moves into the main database. I also wrote agent skills: reusable instructions that let an LLM agent, running on a commercial model through its API, automate parts of the cleaning.</p>
+        </div>
+        <div class="step" data-nodes="schema">
+          <h3>One relational schema</h3>
+          <p>The records live in a <span class="term" data-node="schema">PostgreSQL schema</span> of 13 tables. It uses one-to-many, many-to-one and many-to-many relationships, so a record can be compared across projects, regions and time instead of across files.</p>
+        </div>
+        <div class="step" data-nodes="access app">
+          <h3>Controlled access</h3>
+          <p>Access goes through <span class="term" data-node="access">controlled PostgreSQL user accounts</span>, and the app pools its connections through SQLAlchemy.</p>
+        </div>
+        <div class="step" data-nodes="app users after">
+          <h3>Search without SQL</h3>
+          <p>A <span class="term" data-node="app">search app</span> lets non-technical users filter records, compare them and download the raw data, without writing SQL. A comparison page follows items over time, and a dashboard shows stakeholders which categories or markets are short of data.</p>
+        </div>
+      </section>
+
+      <section data-nodes="" aria-labelledby="decisions">
+        <h2 id="decisions">Decisions</h2>
+        <div class="step" data-nodes="sources">
+          <h3>Started with stakeholder interviews</h3>
+          <p>I identified the people who worked with these records and garnered user stories through interviews. From there, I designed the platform to address two pain points: not knowing which file holds what, and not being able to easily compare across projects, regions and time.</p>
+        </div>
+        <div class="step" data-nodes="staging schema">
+          <h3>Staged the data before migrating it</h3>
+          <p>Instead of loading the spreadsheets straight into the final tables, I passed them through staging tables with cleaning and consistency checks, then migrated them.</p>
+        </div>
+        <div class="step" data-nodes="access app users">
+          <h3>An app in front of the database</h3>
+          <p>The users are non-technical, so they get an app rather than SQL access, and a front end makes the records easy to browse. Behind it, controlled accounts and pooled connections manage database access.</p>
+        </div>
+      </section>
+
+      <section data-nodes="before after" aria-labelledby="evidence">
+        <h2 id="evidence">Evidence</h2>
+        <p>A typical task of finding records and comparing them went from <span class="term" data-node="before">one hour</span> to <span class="term" data-node="after">5–15 minutes</span>. 50 Excel datasets now sit in one shared database.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <span>Joel Lee · Singapore</span>
+    <nav aria-label="Footer">
+      <a href="../../">All systems</a>
+      <button class="theme" type="button" id="theme"></button>
+    </nav>
+  </footer>
+</div>
+<script src="../case-study.js"></script>
+</body>
+</html>

@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joel Lee</title>
+<meta name="description" content="Joel Lee, a Data Analyst in a consumer insights team, builds and runs AI systems for market and sensory research. Seven case studies with architecture, decisions and evidence.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ground: #f3f5f7;
+  --plot: #fbfcfd;
+  --ink: #15181c;
+  --ink-2: #4a525c;
+  --ink-3: #5f6873;
+  --hair: #d5dbe1;
+  --vector: #1d4ed8;
+  --focus: #1d4ed8;
+  /* The band is drawn in the opposite theme's colours, so its accent is the other theme's blue. */
+  --band-accent: #7ea2ff;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #101316; --plot: #15191d; --ink: #eef1f4; --ink-2: #b3bcc6; --ink-3: #8c96a1;
+    --hair: #2a3138; --vector: #7ea2ff; --focus: #7ea2ff; --band-accent: #1d4ed8; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #101316; --plot: #15191d; --ink: #eef1f4; --ink-2: #b3bcc6; --ink-3: #8c96a1;
+  --hair: #2a3138; --vector: #7ea2ff; --focus: #7ea2ff; --band-accent: #1d4ed8; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--ground); scrollbar-color: var(--hair) var(--ground); }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font: 400 17px/1.55 "Schibsted Grotesk", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--vector); color: var(--plot); }
+a { color: inherit; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-color: var(--vector); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+button { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+
+.page { max-width: 1320px; margin: 0 auto; padding: 0 40px; }
+.arrow { flex: none; transition: transform 180ms var(--ease-out); }
+.go { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+.go:hover .arrow { transform: translateX(3px); }
+
+/* The band: the line and the domain edge on ink, drawn in the opposite theme's colours, with the motif beside them.
+   The motif draws only with the five --band-* tokens. */
+.band {
+  --band-bg: var(--ink); --band-fg: var(--ground);
+  --band-muted: color-mix(in srgb, var(--band-fg) 72%, var(--band-bg));
+  --band-faint: color-mix(in srgb, var(--band-fg) 24%, var(--band-bg));
+  background: var(--band-bg); color: var(--band-fg);
+}
+.band ::selection { background: var(--band-fg); color: var(--band-bg); }
+.band :focus-visible { outline-color: var(--band-fg); }
+.mast { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px 32px; padding: 26px 0 0; font-size: 15px; }
+.mast b { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-right: 12px; }
+.mast span { color: var(--band-muted); }
+.mast nav { display: flex; gap: 24px; }
+.mast a { color: var(--band-fg); text-decoration-color: color-mix(in srgb, var(--band-fg) 35%, transparent); }
+.mast a:hover { text-decoration-color: var(--band-fg); }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 0.72fr); gap: 32px 56px; align-items: center; padding: clamp(40px, 7vh, 80px) 0 56px; }
+.hero h1 { font-weight: 800; font-size: clamp(44px, 5.6vw, 84px); line-height: 0.96; letter-spacing: -0.035em; margin-bottom: 26px; text-wrap: balance; }
+.hero .edge { font-size: clamp(17px, 1.4vw, 20px); line-height: 1.45; color: var(--band-muted); max-width: 34em; }
+.hero .edge strong { color: var(--band-fg); font-weight: 500; }
+
+/* The motif. Motion contract, shared with the case studies:
+   1. Every keyframe defines only where an element starts; the end is its own resting state,
+      so the resting state is the finished drawing, and reduced motion shows exactly that.
+   2. transform, opacity and clip-path only. Lines draw with scaleX/scaleY on transform-box: fill-box.
+   3. Delays come from the element's own --d (ms). The motif finishes within about 2.4s and never loops. */
+.motif { width: 100%; max-width: 520px; justify-self: end; }
+.motif svg { display: block; width: 100%; height: auto; overflow: visible; }
+.motif * { transform-box: fill-box; }
+.m-fade { animation: m-fade 240ms ease-out calc(var(--d, 0) * 1ms) both; }
+.m-pop { transform-origin: center; animation: m-pop 260ms var(--ease-out) calc(var(--d, 0) * 1ms) both; }
+.m-draw { transform-origin: left center; animation: m-draw 320ms var(--ease-out) calc(var(--d, 0) * 1ms) both; }
+@keyframes m-fade { from { opacity: 0; } }
+@keyframes m-rise { from { opacity: 0; transform: translateY(8px); } }
+@keyframes m-pop { from { opacity: 0; transform: scale(0.6); } }
+@keyframes m-draw { from { transform: scaleX(0); } }
+.hero h1 { animation: m-rise 360ms var(--ease-out) both; }
+/* Seven loose problems settle into rows, and each draws an arrow to the system built for it. Each row is a link to that
+   system's case study, and its title wipes in as the dot lands. Row order and count follow the work list below.
+   The RAG assistant is selected at rest; hovering or focusing another row moves the selection there.
+   Keyframes sit on wrappers or untouched properties, so the hover transitions never fight them. */
+.motif-home ol { list-style: none; margin: 0; padding: 0; }
+.motif-home a { display: grid; grid-template-columns: minmax(0, 248px) minmax(0, 1fr); align-items: center; gap: 18px; min-height: 52px; color: var(--band-muted); text-decoration: none; }
+.motif-home a svg { width: 100%; }
+.motif-home .prob line { stroke: var(--band-muted); stroke-width: 1.5; transition: stroke 160ms ease-out; }
+.motif-home .prob { transform-origin: center; animation: home-settle 760ms var(--ease-in-out) calc(var(--d) * 1ms) both; }
+.motif-home .to { stroke: var(--band-faint); stroke-width: 1.5; transition: stroke 160ms ease-out; }
+.motif-home .head { fill: none; stroke: var(--band-faint); stroke-width: 1.5; transition: stroke 160ms ease-out, transform 180ms var(--ease-out); }
+.motif-home .dot { fill: var(--band-fg); transition: fill 160ms ease-out; }
+.motif-home .ring { fill: none; stroke: var(--band-accent); stroke-width: 1.5; transform-origin: center; opacity: 0; transform: scale(0.6); transition: opacity 160ms ease-out, transform 200ms var(--ease-out); }
+.motif-home .name { font-size: 17px; font-weight: 500; line-height: 1.25; text-decoration: underline 1px transparent; text-underline-offset: 0.22em; transition: color 160ms ease-out, text-decoration-color 160ms ease-out; }
+.m-wipe { animation: m-wipe 360ms var(--ease-out) calc(var(--d, 0) * 1ms) both; }
+@keyframes m-wipe { from { clip-path: inset(0 100% 0 0); } }
+.motif-home ol:not(:hover):not(:has(a:focus-visible)) .lead a, .motif-home a:hover, .motif-home a:focus-visible { color: var(--band-fg); }
+.motif-home ol:not(:hover):not(:has(a:focus-visible)) .lead :is(.to, .head), .motif-home a:is(:hover, :focus-visible) :is(.to, .head) { stroke: var(--band-accent); }
+.motif-home ol:not(:hover):not(:has(a:focus-visible)) .lead .dot, .motif-home a:is(:hover, :focus-visible) .dot { fill: var(--band-accent); }
+.motif-home ol:not(:hover):not(:has(a:focus-visible)) .lead .ring, .motif-home a:is(:hover, :focus-visible) .ring { opacity: 1; transform: none; }
+.motif-home a:is(:hover, :focus-visible) .prob line { stroke: var(--band-fg); }
+.motif-home a:is(:hover, :focus-visible) .head { transform: translateX(3px); }
+.motif-home a:is(:hover, :focus-visible) .name { text-decoration-color: var(--band-accent); }
+@keyframes home-settle {
+  0% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--r)); }
+  25% { opacity: 1; }
+}
+
+/* The work: problem and system pairs on the left, the figure of the pair in view pinned on the right */
+.work { padding-top: 56px; }
+.split { display: grid; grid-template-columns: minmax(0, 30em) minmax(0, 1fr); gap: 0 64px; align-items: start; }
+.pair { position: relative; border-top: 1px solid var(--hair); padding: 44px 0 52px; min-height: 44vh; }
+.pair:first-child { border-top: 0; padding-top: 8px; }
+.pairs > :last-child { border-bottom: 1px solid var(--hair); }
+.pair .prob { font-size: clamp(17px, 1.4vw, 19px); line-height: 1.4; color: var(--ink-2); max-width: 26em; padding: 2px 24px 0 0; text-wrap: pretty; transition: color 160ms ease-out; }
+.pair .to { display: block; padding: 12px 0 10px; color: var(--ink-3); }
+.pair .to svg { display: block; transform-origin: center top; transform: scaleY(0.6); transition: transform 200ms var(--ease-out), color 160ms ease-out; }
+.pair h3 { font-size: clamp(24px, 2.2vw, 30px); line-height: 1.1; letter-spacing: -0.02em; font-weight: 700; }
+.pair h3 a { text-decoration: none; }
+.pair .by { font-size: 14px; color: var(--ink-3); margin: 6px 0 10px; }
+.pair .tag { font-weight: 500; color: var(--ink-2); }
+.pair .oc { font-size: 18px; line-height: 1.4; font-weight: 500; max-width: 30em; text-wrap: pretty; }
+.pair .go { margin-top: 16px; }
+.pair .dp-wrap { margin-top: 18px; }
+.pair.on .prob { color: var(--ink); }
+.pair.on .to { color: var(--vector); }
+.pair.on .to svg { transform: scaleY(1); }
+.pair.on h3 a { text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: var(--vector); }
+.pin { position: sticky; top: 24px; }
+.slot[hidden] { display: none; }
+.slot { animation: fade 160ms ease-out both; }
+.slot-h { font-size: 13px; font-weight: 500; color: var(--ink-3); margin-bottom: 10px; }
+.inline-fig { display: none; }
+
+/* Figures: the pipeline, flows and time charts */
+.frame { background: var(--plot); border: 1px solid var(--hair); padding: 20px 20px 12px; }
+.frame svg { display: block; width: 100%; height: auto; }
+.pin .frame svg { max-height: calc(100svh - 190px); }
+.fig { margin: 0; }
+.fig .note { font-size: 15px; color: var(--ink-2); margin-top: 12px; min-height: 3.2em; max-width: 40em; }
+.fig .note b { color: var(--ink); }
+svg text { font-family: "Schibsted Grotesk", system-ui, sans-serif; }
+.node rect { fill: var(--plot); stroke: var(--ink-3); stroke-width: 1; transition: stroke 140ms ease-out; }
+.node .t { fill: var(--ink); font-size: 14px; font-weight: 700; }
+.node .s { fill: var(--ink-3); font-size: 12px; }
+.node { outline: none; }
+.node[data-note] { cursor: default; }
+.node[data-note]:hover rect, .node:focus-visible rect, .node.on rect { stroke: var(--vector); stroke-width: 1.5; }
+.node.dashed rect { stroke-dasharray: 4 3; }
+.node.removed .t { text-decoration: line-through; fill: var(--ink-3); }
+.edge-l { stroke: var(--ink-3); stroke-width: 1; fill: none; }
+.edge-l.dashed { stroke-dasharray: 4 3; }
+.ah { fill: var(--ink-3); }
+.tc .tt { fill: var(--ink); font-size: 14px; font-weight: 700; }
+.tc .ts { fill: var(--ink-3); font-size: 12px; }
+.tc .lab { fill: var(--ink); font-size: 14px; font-weight: 700; }
+.tc .bar { fill: var(--ink); }
+.tc .live .bar { fill: var(--vector); }
+.tc .live .val { fill: var(--vector); font-weight: 500; }
+.tc .val { fill: var(--ink-2); font-size: 13px; }
+.tc .axis { stroke: var(--hair); }
+.tc .tick { fill: var(--ink-3); font-size: 12px; }
+.node { transform-box: fill-box; animation: node-in 240ms var(--ease-out) both; animation-delay: calc(80ms + var(--i) * 50ms); }
+.edges { animation: fade 260ms ease-out 420ms both; }
+.tc .bar { transform-box: fill-box; transform-origin: left center; animation: bar-in 320ms var(--ease-out) both; animation-delay: calc(120ms + var(--i) * 80ms); }
+@keyframes node-in { from { opacity: 0; transform: translateY(5px); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes bar-in { from { transform: scaleX(0); } }
+
+/* The RAG evidence: three pipeline versions on a 0 to 1 track */
+.dp { margin: 0; padding: 0; list-style: none; }
+.dp li { display: grid; grid-template-columns: 11em minmax(0, 1fr); align-items: center; gap: 12px; font-size: 14px; line-height: 1.25; color: var(--ink-2); min-height: 28px; padding: 3px 0; }
+.dp .track { position: relative; align-self: stretch; min-height: 22px; }
+.dp .track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--hair); }
+.dp .mark { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--ink); animation: grow 220ms var(--ease-out) both; animation-delay: calc(240ms + var(--i) * 60ms); }
+.dp .mark + span { position: absolute; top: 50%; transform: translate(10px, -52%); font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+.dp li.live { color: var(--ink); font-weight: 500; }
+.dp li.live .mark { background: var(--vector); box-shadow: 0 0 0 3px var(--plot), 0 0 0 5px var(--vector); }
+.dp li.live .mark + span { color: var(--vector); font-weight: 500; transform: translate(14px, -52%); }
+.ticks { display: grid; grid-template-columns: 11em minmax(0, 1fr); gap: 12px; font-size: 12px; color: var(--ink-3); }
+.ticks span:last-child { display: flex; justify-content: space-between; }
+.dp-note { font-size: 13px; color: var(--ink-3); margin: 8px 0 0; }
+@keyframes grow { from { transform: scale(0); } }
+
+footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding: 56px 0 64px; color: var(--ink-2); font-size: 15px; }
+footer nav { display: flex; gap: 24px; flex-wrap: wrap; }
+footer .theme { background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 0.22em; text-decoration-color: var(--hair); color: var(--ink-3); }
+
+/* Stacked: no pinned figure; each pair carries its own figure, scrolling sideways inside its frame. */
+@media (max-width: 900px) {
+  .page { padding: 0 16px; }
+  .hero { grid-template-columns: 1fr; padding-top: 32px; }
+  .motif { justify-self: start; max-width: 420px; }
+  .motif-home a { grid-template-columns: minmax(0, 132px) minmax(0, 1fr); gap: 14px; min-height: 46px; }
+  .motif-home .name { font-size: 16px; }
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .pin { display: none; }
+  .pair { min-height: 0; padding: 24px 0 28px; }
+  .pair .to { padding: 8px 0; }
+  .pair .to svg { transform: none; }
+  .inline-fig { display: block; margin-top: 20px; }
+  .frame { overflow-x: auto; padding: 14px; }
+  .frame svg { min-width: 540px; }
+  .dp li, .ticks { grid-template-columns: 9.5em minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8Z"/></marker></defs></svg>
+<div class="band"><div class="page">
+  <header class="mast"><p><b>Joel Lee</b><span>Data Analyst, Applied AI &amp; ML · Singapore</span></p>
+    <nav aria-label="Site"><a href="#work">Work</a><a href="https://www.linkedin.com/in/joellee3433b221a" rel="noopener">LinkedIn</a><a href="mailto:cryptic912@gmail.com">Email</a></nav></header>
+  <div class="hero"><div><h1>I find out what people need, then build and run the AI systems they use.</h1>
+    <p class="edge">I work as a Data Analyst in a consumer insights team, building applied ML and generative AI tools for market and sensory research. <strong> I turn consumer and business problems into systems people use, from the first stakeholder interview to production support. </strong></p></div>
+    <nav class="motif motif-home" aria-label="Case studies"><ol>
+      <li class="lead"><a href="work/rag/"><svg viewBox="0 0 248 44" aria-hidden="true">
+        <g class="prob" style="--dx:40px; --dy:70px; --r:-24deg; --d:0"><line x1="0" y1="18" x2="118" y2="18"/><line x1="0" y1="26" x2="84" y2="26"/></g>
+        <line class="to m-draw" x1="148" y1="22" x2="208" y2="22" style="--d:720"/>
+        <path class="head m-fade" d="M204 18.5L210 22L204 25.5" style="--d:940"/>
+        <g class="m-pop" style="--d:1500"><circle class="ring" cx="236" cy="22" r="10"/></g><circle class="dot m-pop" cx="236" cy="22" r="5" style="--d:880"/>
+      </svg><span class="name m-wipe" style="--d:920">Agentic RAG assistant</span></a></li>
+      <li><a href="work/nlp/"><svg viewBox="0 0 248 44" aria-hidden="true">
+        <g class="prob" style="--dx:110px; --dy:-18px; --r:18deg; --d:60"><line x1="0" y1="18" x2="96" y2="18"/><line x1="0" y1="26" x2="62" y2="26"/></g>
+        <line class="to m-draw" x1="148" y1="22" x2="208" y2="22" style="--d:790"/>
+        <path class="head m-fade" d="M204 18.5L210 22L204 25.5" style="--d:1010"/>
+        <circle class="ring" cx="236" cy="22" r="10"/><circle class="dot m-pop" cx="236" cy="22" r="5" style="--d:950"/>
+      </svg><span class="name m-wipe" style="--d:990">Survey NLP app</span></a></li>
+      <li><a href="work/records/"><svg viewBox="0 0 248 44" aria-hidden="true">
+        <g class="prob" style="--dx:12px; --dy:52px; --r:-12deg; --d:120"><line x1="0" y1="18" x2="124" y2="18"/><line x1="0" y1="26" x2="70" y2="26"/></g>
+        <line class="to m-draw" x1="148" y1="22" x2="208" y2="22" style="--d:860"/>
+        <path class="head m-fade" d="M204 18.5L210 22L204 25.5" style="--d:1080"/>
+        <circle class="ring" cx="236" cy="22" r="10"/><circle class="dot m-pop" cx="236" cy="22" r="5" style="--d:1020"/>
+      </svg><span class="name m-wipe" style="--d:1060">Product record platform</span></a></li>
+      <li><a href="work/platform/"><svg viewBox="0 0 248 44" aria-hidden="true">
+        <g class="prob" style="--dx:128px; --dy:24px; --r:30deg; --d:180"><line x1="0" y1="18" x2="88" y2="18"/><line x1="0" y1="26" x2="76" y2="26"/></g>
+        <line class="to m-draw" x1="148" y1="22" x2="208" y2="22" style="--d:930"/>
+        <path class="head m-fade" d="M204 18.5L210 22L204 25.5" style="--d:1150"/>
+        <circle class="ring" cx="236" cy="22" r="10"/><circle class="dot m-pop" cx="236" cy="22" r="5" style="--d:1090"/>
+      </svg><span class="name m-wipe" style="--d:1130">App platform</span></a></li>
+      <li><a href="work/gpu/"><svg viewBox="0 0 248 44" aria-hidden="true">
+        <g class="prob" style="--dx:64px; --dy:-56px; --r:-32deg; --d:240"><line x1="0" y1="18" x2="110" y2="18"/><line x1="0" y1="26" x2="52" y2="26"/></g>
+        <line class="to m-draw" x1="148" y1="22" x2="208" y2="22" style="--d:1000"/>
+        <path class="head m-fade" d="M204 18.5L210 22L204 25.5" style="--d:1220"/>
+        <circle class="ring" cx="236" cy="22" r="10"/><circle class="dot m-pop" cx="236" cy="22" r="5" style="--d:1160"/>
+      </svg><span class="name m-wipe" style="--d:1200">Local inference stack</span></a></li>
+      <li><a href="work/mengo/"><svg viewBox="0 0 248 44" aria-hidden="true">
+        <g class="prob" style="--dx:30px; --dy:-82px; --r:22deg; --d:360"><line x1="0" y1="18" x2="116" y2="18"/><line x1="0" y1="26" x2="58" y2="26"/></g>
+        <line class="to m-draw" x1="148" y1="22" x2="208" y2="22" style="--d:1140"/>
+        <path class="head m-fade" d="M204 18.5L210 22L204 25.5" style="--d:1360"/>
+        <circle class="ring" cx="236" cy="22" r="10"/><circle class="dot m-pop" cx="236" cy="22" r="5" style="--d:1300"/>
+      </svg><span class="name m-wipe" style="--d:1340">Mengo</span></a></li>
+      <li><a href="work/formulation/"><svg viewBox="0 0 248 44" aria-hidden="true">
+        <g class="prob" style="--dx:92px; --dy:-34px; --r:14deg; --d:300"><line x1="0" y1="18" x2="100" y2="18"/><line x1="0" y1="26" x2="80" y2="26"/></g>
+        <line class="to m-draw" x1="148" y1="22" x2="208" y2="22" style="--d:1070"/>
+        <path class="head m-fade" d="M204 18.5L210 22L204 25.5" style="--d:1290"/>
+        <circle class="ring" cx="236" cy="22" r="10"/><circle class="dot m-pop" cx="236" cy="22" r="5" style="--d:1230"/>
+      </svg><span class="name m-wipe" style="--d:1270">Formulation optimizer</span></a></li>
+    </ol></nav></div>
+</div></div>
+
+<div class="page">
+<main>
+<section class="work" id="work" aria-label="Problems and the systems I built for them">
+  <div class="split">
+    <div class="pairs"><article class="pair on" data-id="rag">
+      <p class="prob">Methods were scattered across documents and legacy slide decks, and new or busy colleagues struggled to map everyday words to the team's fixed lexicon.</p><span class="to"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0v27M2 22l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></span>
+      <div><h3><a href="work/rag/">Agentic RAG assistant</a></h3>
+  <p class="by">Used by teams across APAC</p>
+  <p class="oc">Stakeholders say methods and the team’s lexicon are now easier to find.</p><div class="dp-wrap"><ul class="dp" aria-label="Retrieval quality across three pipeline versions">
+    <li class=""><span>With an LLM evaluator</span><span class="track"><span class="mark" style="left:60%; --i:0"></span><span style="left:60%">about 0.6</span></span></li><li class=""><span>Evaluator removed</span><span class="track"><span class="mark" style="left:60%; --i:1"></span><span style="left:60%">about 0.6</span></span></li><li class="live"><span>Reranker added, live</span><span class="track"><span class="mark" style="left:70%; --i:2"></span><span style="left:70%">about 0.7</span></span></li>
+  </ul><div class="ticks" aria-hidden="true"><span></span><span><span>0</span><span>1</span></span></div>
+  <p class="dp-note">Precision, recall and nDCG@8 each, on about 72 synthetic, LLM-labeled questions.</p></div><a class="go" href="work/rag/">Read the case study <svg class="arrow" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a></div>
+      <div class="inline-fig"><figure class="fig" data-fig="rag"><div class="frame"><svg viewBox="0 0 640 580" role="group" aria-label="Pipeline of the Agentic RAG assistant"><g class="edges"><path class="edge-l" d="M210,60L210,84" marker-end="url(#ah)"/><path class="edge-l" d="M210,136L79,170" marker-end="url(#ah)"/><path class="edge-l" d="M210,136L210,170" marker-end="url(#ah)"/><path class="edge-l" d="M210,136L341,170" marker-end="url(#ah)"/><path class="edge-l" d="M79,222L79,256" marker-end="url(#ah)"/><path class="edge-l" d="M210,222L210,256" marker-end="url(#ah)"/><path class="edge-l" d="M341,222L341,256" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,282L440,282" marker-end="url(#ah)"/><path class="edge-l" d="M210,308L210,342" marker-end="url(#ah)"/><path class="edge-l dashed" d="M440,368L400,368" marker-end="url(#ah)"/><path class="edge-l" d="M210,394L210,428" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,454L440,454" marker-end="url(#ah)"/><path class="edge-l" d="M210,480L210,514" marker-end="url(#ah)"/></g><g class="node " style="--i:0" data-note="q" tabindex="0" aria-label="Question">
+    <rect x="150" y="20" width="120" height="40"/>
+    <text class="t" x="162" y="45">Question</text>
+    </g><g class="node " style="--i:1" data-note="c" tabindex="0" aria-label="Clarifier: Asks follow-ups, records the answers, picks a collection">
+    <rect x="20" y="84" width="380" height="52"/>
+    <text class="t" x="32" y="106">Clarifier</text>
+    <text class="s" x="32" y="124">Asks follow-ups, records the answers, picks a collection</text></g><g class="node " style="--i:2" data-note="r1" tabindex="0" aria-label="Retriever: Knowledge base 1">
+    <rect x="20" y="170" width="118" height="52"/>
+    <text class="t" x="32" y="192">Retriever</text>
+    <text class="s" x="32" y="210">Knowledge base 1</text></g><g class="node " style="--i:3" data-note="r2" tabindex="0" aria-label="Retriever: Knowledge base 2">
+    <rect x="151" y="170" width="118" height="52"/>
+    <text class="t" x="163" y="192">Retriever</text>
+    <text class="s" x="163" y="210">Knowledge base 2</text></g><g class="node " style="--i:4" data-note="r3" tabindex="0" aria-label="Retriever: Knowledge base 3">
+    <rect x="282" y="170" width="118" height="52"/>
+    <text class="t" x="294" y="192">Retriever</text>
+    <text class="s" x="294" y="210">Knowledge base 3</text></g><g class="node " style="--i:5" data-note="h" tabindex="0" aria-label="Hybrid search: BM25 keywords and vectors">
+    <rect x="20" y="256" width="380" height="52"/>
+    <text class="t" x="32" y="278">Hybrid search</text>
+    <text class="s" x="32" y="296">BM25 keywords and vectors</text></g><g class="node dashed removed" style="--i:6" data-note="e" tabindex="0" aria-label="Evaluator agent: Removed after testing">
+    <rect x="440" y="256" width="180" height="52"/>
+    <text class="t" x="452" y="278">Evaluator agent</text>
+    <text class="s" x="452" y="296">Removed after testing</text></g><g class="node " style="--i:7" data-note="k" tabindex="0" aria-label="Cross-encoder rerank: Reorders the combined results">
+    <rect x="20" y="342" width="380" height="52"/>
+    <text class="t" x="32" y="364">Cross-encoder rerank</text>
+    <text class="s" x="32" y="382">Reorders the combined results</text></g><g class="node dashed" style="--i:8" data-note="g" tabindex="0" aria-label="Local GPU: Embeddings and reranker">
+    <rect x="440" y="342" width="180" height="52"/>
+    <text class="t" x="452" y="364">Local GPU</text>
+    <text class="s" x="452" y="382">Embeddings and reranker</text></g><g class="node " style="--i:9" data-note="n" tabindex="0" aria-label="Generator: API model; can search again with a rewritten query">
+    <rect x="20" y="428" width="380" height="52"/>
+    <text class="t" x="32" y="450">Generator</text>
+    <text class="s" x="32" y="468">API model; can search again with a rewritten query</text></g><g class="node dashed" style="--i:10" data-note="l" tabindex="0" aria-label="Langfuse: Traces every run">
+    <rect x="440" y="428" width="180" height="52"/>
+    <text class="t" x="452" y="450">Langfuse</text>
+    <text class="s" x="452" y="468">Traces every run</text></g><g class="node " style="--i:11" data-note="a" tabindex="0" aria-label="Answer with sources: The documents it drew on, listed with every answer">
+    <rect x="20" y="514" width="380" height="52"/>
+    <text class="t" x="32" y="536">Answer with sources</text>
+    <text class="s" x="32" y="554">The documents it drew on, listed with every answer</text></g></svg></div>
+  <figcaption class="note" data-default="Point at any part of the pipeline to see what it does." aria-live="polite">Point at any part of the pipeline to see what it does. </figcaption></figure></div></article><article class="pair" data-id="nlp">
+      <p class="prob">Open-ended survey answers come back in several languages. A first pass through thousands of responses took about 1–2 working days.</p><span class="to"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0v27M2 22l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></span>
+      <div><h3><a href="work/nlp/">Survey NLP app</a></h3>
+  <p class="by">Used by a small market-insights group</p>
+  <p class="oc">The same first pass now takes under an hour.</p><a class="go" href="work/nlp/">Read the case study <svg class="arrow" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a></div>
+      <div class="inline-fig"><figure class="fig" data-fig="nlp"><div class="frame"><svg class="tc" viewBox="0 0 640 246" role="img" aria-label="First-pass review of about 4,000 responses: Before about 1–2 working days, With the app no more than about 1 hour">
+    <text class="tt" x="20" y="26">First-pass review of about 4,000 responses</text><text class="ts" x="20" y="44">Translation, sentiment analysis and review; estimated working time</text>
+    <g class="">
+      <text class="lab" x="20" y="100">Before</text><text class="ts" x="20" y="117">Before the app</text>
+      <rect class="bar" style="--i:0" x="220" y="88" width="380" height="16"/>
+      <text class="val" x="596" y="124" text-anchor="end">about 1–2 working days</text></g><g class="live">
+      <text class="lab" x="20" y="164">With the app</text><text class="ts" x="20" y="181">Upper bound</text>
+      <rect class="bar" style="--i:1" x="220" y="152" width="23.75" height="16"/>
+      
+      <text class="val" x="253.75" y="164" text-anchor="start">no more than about 1 hour</text></g>
+    <line class="axis" x1="220" x2="600" y1="206" y2="206"/>
+    <line class="axis" x1="220" x2="220" y1="206" y2="211"/><text class="tick" x="220" y="226" text-anchor="middle">0</text><line class="axis" x1="410" x2="410" y1="206" y2="211"/><text class="tick" x="410" y="226" text-anchor="middle">1 day</text><line class="axis" x1="600" x2="600" y1="206" y2="211"/><text class="tick" x="600" y="226" text-anchor="middle">2 days</text></svg></div></figure></div></article><article class="pair" data-id="records">
+      <p class="prob">Product records were spread across spreadsheets, and a typical lookup and comparison took hours.</p><span class="to"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0v27M2 22l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></span>
+      <div><h3><a href="work/records/">Product record platform</a></h3>
+  <p class="by">Used by regional teams in APAC</p>
+  <p class="oc">Finding and comparing records now takes 5–15 minutes.</p><a class="go" href="work/records/">Read the case study <svg class="arrow" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a></div>
+      <div class="inline-fig"><figure class="fig" data-fig="records"><div class="frame"><svg class="tc" viewBox="0 0 640 246" role="img" aria-label="A typical record-location and comparison task: Before about 1 hour, After about 5–15 minutes">
+    <text class="tt" x="20" y="26">A typical record-location and comparison task</text><text class="ts" x="20" y="44">Time per task in minutes, my estimate</text>
+    <g class="">
+      <text class="lab" x="20" y="100">Before</text><text class="ts" x="20" y="117">Excel files</text>
+      <rect class="bar" style="--i:0" x="220" y="88" width="380" height="16"/>
+      
+      <text class="val" x="596" y="124" text-anchor="end">about 1 hour</text></g><g class="live">
+      <text class="lab" x="20" y="164">After</text><text class="ts" x="20" y="181">Search app</text>
+      <rect class="bar" style="--i:1" x="220" y="152" width="95" height="16"/>
+      <text class="val" x="325" y="164" text-anchor="start">about 5–15 minutes</text></g>
+    <line class="axis" x1="220" x2="600" y1="206" y2="206"/>
+    <line class="axis" x1="220" x2="220" y1="206" y2="211"/><text class="tick" x="220" y="226" text-anchor="middle">0</text><line class="axis" x1="315" x2="315" y1="206" y2="211"/><text class="tick" x="315" y="226" text-anchor="middle">15</text><line class="axis" x1="410" x2="410" y1="206" y2="211"/><text class="tick" x="410" y="226" text-anchor="middle">30</text><line class="axis" x1="505" x2="505" y1="206" y2="211"/><text class="tick" x="505" y="226" text-anchor="middle">45</text><line class="axis" x1="600" x2="600" y1="206" y2="211"/><text class="tick" x="600" y="226" text-anchor="middle">60</text></svg></div>
+  <figcaption class="note" data-default="Behind the search, about 50 Excel datasets became 13 PostgreSQL tables.">Behind the search, about 50 Excel datasets became 13 PostgreSQL tables.</figcaption></figure></div></article><article class="pair" data-id="platform">
+      <p class="prob">Internal analytics apps were scattered across separate links, with no shared way to give people access, track usage or deploy.</p><span class="to"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0v27M2 22l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></span>
+      <div><h3><a href="work/platform/">Centralized App platform</a></h3>
+  <p class="by">Roughly 80 users a month</p>
+  <p class="oc">Hundreds of accounts reach 15–20 internal analytics apps through one sign-in, instead of a scattered set of links.</p><a class="go" href="work/platform/">Read the case study <svg class="arrow" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a></div>
+      <div class="inline-fig"><figure class="fig" data-fig="platform"><div class="frame"><svg viewBox="0 0 640 378" role="group" aria-label="How the app platform serves its users"><g class="edges"><path class="edge-l" d="M210,68L210,98" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,124L440,124" marker-end="url(#ah)"/><path class="edge-l" d="M210,166L210,196" marker-end="url(#ah)"/><path class="edge-l" d="M210,264L210,294" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,320L440,320" marker-end="url(#ah)"/></g><g class="node " style="--i:0" aria-label="Users: About 300 accounts; 80 active monthly users">
+    <rect x="20" y="16" width="380" height="52"/>
+    <text class="t" x="32" y="38">Users</text>
+    <text class="s" x="32" y="56">About 300 accounts; 80 active monthly users</text></g><g class="node " style="--i:1" aria-label="ShinyProxy: One sign-in for every app Group-based app access, managed in one configuration">
+    <rect x="20" y="98" width="380" height="68"/>
+    <text class="t" x="32" y="120">ShinyProxy</text>
+    <text class="s" x="32" y="138">One sign-in for every app</text><text class="s" x="32" y="154">Group-based app access, managed in one configuration</text></g><g class="node dashed" style="--i:2" aria-label="Monitoring app: Reads ShinyProxy logs for troubleshooting">
+    <rect x="440" y="98" width="180" height="68"/>
+    <text class="t" x="452" y="120">Monitoring app</text>
+    <text class="s" x="452" y="138">Reads ShinyProxy logs</text><text class="s" x="452" y="154">for troubleshooting</text></g><g class="node " style="--i:3" aria-label="Podman: Starts an app’s container when someone opens it Stops when idle; keeps the most frequented apps warm">
+    <rect x="20" y="196" width="380" height="68"/>
+    <text class="t" x="32" y="218">Podman</text>
+    <text class="s" x="32" y="236">Starts an app’s container when someone opens it</text><text class="s" x="32" y="252">Stops when idle; keeps the most frequented apps warm</text></g><g class="node " style="--i:4" aria-label="15–20 containerized apps: One container per session, or shared for read-only apps">
+    <rect x="20" y="294" width="380" height="52"/>
+    <text class="t" x="32" y="316">15–20 containerized apps</text>
+    <text class="s" x="32" y="334">One container per session, or shared for read-only apps</text></g><g class="node dashed" style="--i:5" aria-label="Weekly backups: Automated SQL database backups">
+    <rect x="440" y="294" width="180" height="68"/>
+    <text class="t" x="452" y="316">Weekly backups</text>
+    <text class="s" x="452" y="334">Automated SQL</text><text class="s" x="452" y="350">database backups</text></g></svg></div>
+    </figure></div></article><article class="pair" data-id="gpu">
+      <p class="prob">Every embedding, reranking, assistant and coding call went to paid APIs.</p><span class="to"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0v27M2 22l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></span>
+      <div><h3><a href="work/gpu/">Local inference stack</a></h3>
+  <p class="by">Runs hybrid search and simple coding tasks on open-weight models</p>
+  <p class="oc">Hybrid search and simple coding tasks run on company hardware, with no per-call API fee; the assistant&rsquo;s answers still come from a stronger API model.</p><a class="go" href="work/gpu/">Read the case study <svg class="arrow" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a></div>
+      <div class="inline-fig"><figure class="fig" data-fig="gpu"><div class="frame"><svg viewBox="0 0 640 428" role="group" aria-label="How the local inference stack serves the assistant and coding tasks"><g class="edges"><path class="edge-l dashed" d="M400,42L440,42" marker-end="url(#ah)"/><path class="edge-l" d="M210,68L210,98" marker-end="url(#ah)"/><path class="edge-l" d="M210,150L210,180" marker-end="url(#ah)"/><path class="edge-l" d="M440,206L400,206" marker-end="url(#ah)"/><path class="edge-l" d="M210,248L210,278" marker-end="url(#ah)"/><path class="edge-l" d="M210,330L210,360" marker-end="url(#ah)"/></g><g class="node " style="--i:0" aria-label="Agentic RAG assistant: Search runs locally; answers come from the API">
+    <rect x="20" y="16" width="380" height="52"/>
+    <text class="t" x="32" y="38">Agentic RAG assistant</text>
+    <text class="s" x="32" y="56">Search runs locally; answers come from the API</text></g><g class="node dashed" style="--i:1" aria-label="External API: Answer generation">
+    <rect x="440" y="16" width="180" height="52"/>
+    <text class="t" x="452" y="38">External API</text>
+    <text class="s" x="452" y="56">Answer generation</text></g><g class="node " style="--i:2" aria-label="Container Warm-up request: Sent on app open; hides a 40–60 s load">
+    <rect x="20" y="98" width="380" height="52"/>
+    <text class="t" x="32" y="120">Container Warm-up request</text>
+    <text class="s" x="32" y="138">Sent on app open; hides a 40–60 s load</text></g><g class="node " style="--i:3" aria-label="llama-swap: One OpenAI-compatible endpoint on one port Starts the model containers on demand">
+    <rect x="20" y="180" width="380" height="68"/>
+    <text class="t" x="32" y="202">llama-swap</text>
+    <text class="s" x="32" y="220">One OpenAI-compatible endpoint on one port</text><text class="s" x="32" y="236">Starts the model containers on demand</text></g><g class="node " style="--i:4" aria-label="IDE assistant: Simple coding tasks run locally">
+    <rect x="440" y="180" width="180" height="68"/>
+    <text class="t" x="452" y="202">IDE assistant</text>
+    <text class="s" x="452" y="220">Simple coding tasks</text><text class="s" x="452" y="236">run locally</text></g><g class="node " style="--i:5" aria-label="vLLM in Podman, on a local GPU">
+    <rect x="20" y="278" width="380" height="52"/>
+    <text class="t" x="32" y="300">vLLM in Podman, on a local GPU</text>
+    </g><g class="node " style="--i:6" aria-label="Embeddings and reranker: Used by RAG hybrid search">
+    <rect x="20" y="360" width="380" height="52"/>
+    <text class="t" x="32" y="382">Embeddings and reranker</text>
+    <text class="s" x="32" y="400">Used by RAG hybrid search</text></g></svg></div>
+  </figure></div></article><article class="pair" data-id="mengo">
+      <p class="prob">Ask a coding agent for a whole feature and it can go in circles for a long time as its context fills, then return one change too large to review.</p><span class="to"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0v27M2 22l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></span>
+      <div><h3><a href="work/mengo/">Mengo</a></h3>
+  <p class="by"><span class="tag">Open source, planned</span> · My personal software factory</p>
+  <p class="oc">Splits a spec into small tickets so each agent works in a small context. One agent implements each ticket test-first; a second reviews it against the coding standards and acceptance criteria before Mengo commits.</p><a class="go" href="work/mengo/">Read the case study <svg class="arrow" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a></div>
+      <div class="inline-fig"><figure class="fig" data-fig="mengo"><div class="frame"><svg viewBox="0 0 640 526" role="group" aria-label="Mengo’s loop for each ticket"><g class="edges"><path class="edge-l" d="M210,68L210,98" marker-end="url(#ah)"/><path class="edge-l" d="M210,150L210,180" marker-end="url(#ah)"/><path class="edge-l" d="M210,232L210,262" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,288L440,288" marker-end="url(#ah)"/><path class="edge-l" d="M210,330L210,360" marker-end="url(#ah)"/><path class="edge-l" d="M210,428L210,458" marker-end="url(#ah)"/></g><g class="node " style="--i:0" aria-label="Spec: The change you want">
+    <rect x="20" y="16" width="380" height="52"/>
+    <text class="t" x="32" y="38">Spec</text>
+    <text class="s" x="32" y="56">The change you want</text></g><g class="node " style="--i:1" aria-label="Tickets: With acceptance criteria">
+    <rect x="20" y="98" width="380" height="52"/>
+    <text class="t" x="32" y="120">Tickets</text>
+    <text class="s" x="32" y="138">With acceptance criteria</text></g><g class="node " style="--i:2" aria-label="Implement: An agent reads the ticket and changes the code using a TDD skill">
+    <rect x="20" y="180" width="380" height="52"/>
+    <text class="t" x="32" y="202">Implement</text>
+    <text class="s" x="32" y="220">An agent reads the ticket and changes the code using a TDD skill</text></g><g class="node " style="--i:3" aria-label="Check: Runs deterministic checks set beforehand in mengo.toml; the implementer repairs required checks that newly fail">
+    <rect x="20" y="262" width="380" height="68"/>
+    <text class="t" x="32" y="284">Check</text>
+    <text class="s" x="32" y="302">Runs deterministic checks set beforehand in mengo.toml;</text><text class="s" x="32" y="318">the implementer repairs required checks that newly fail</text></g><g class="node dashed" style="--i:4" aria-label="Repair budget: Three rounds per ticket by default">
+    <rect x="440" y="262" width="180" height="68"/>
+    <text class="t" x="452" y="284">Repair budget</text>
+    <text class="s" x="452" y="302">Three rounds per</text><text class="s" x="452" y="318">ticket by default</text></g><g class="node " style="--i:5" aria-label="Review: A second agent reviews the change against the ticket and the repo’s coding standards, and fixes problems">
+    <rect x="20" y="360" width="380" height="68"/>
+    <text class="t" x="32" y="382">Review</text>
+    <text class="s" x="32" y="400">A second agent reviews the change against</text><text class="s" x="32" y="416">the ticket and the repo’s coding standards, and fixes problems</text></g><g class="node " style="--i:6" aria-label="Commit: One local commit per ticket">
+    <rect x="20" y="458" width="380" height="52"/>
+    <text class="t" x="32" y="480">Commit</text>
+    <text class="s" x="32" y="498">One local commit per ticket.</text></g></svg></div>
+ </figure></div></article><article class="pair" data-id="formulation">
+      <p class="prob">New formulations start at the bench from a blank canvas, with only about 40 past trials to learn from.</p><span class="to"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0v27M2 22l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></span>
+      <div><h3><a href="work/formulation/">Formulation optimizer</a></h3>
+  <p class="by">Prototype from an R&D rotation</p>
+  <p class="oc">Suggests a starting formulation to guide bench prototyping.</p><a class="go" href="work/formulation/">Read the case study <svg class="arrow" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a></div>
+      <div class="inline-fig"><figure class="fig" data-fig="formulation"><div class="frame"><svg viewBox="0 0 640 460" role="group" aria-label="How the formulation optimizer suggests a starting point"><g class="edges"><path class="edge-l" d="M210,68L210,98" marker-end="url(#ah)"/><path class="edge-l" d="M210,166L210,196" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,222L440,222" marker-end="url(#ah)"/><path class="edge-l" d="M210,248L210,294" marker-end="url(#ah)"/><path class="edge-l" d="M210,346L210,376" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,402L440,402" marker-end="url(#ah)"/></g><g class="node " style="--i:0" aria-label="40 data points: 100 features">
+    <rect x="20" y="16" width="380" height="52"/>
+    <text class="t" x="32" y="38">40 data points</text>
+    <text class="s" x="32" y="56">100 features</text></g><g class="node " style="--i:1" aria-label="Domain feature aggregation: Features with similar roles were grouped together, advised by technical experts">
+    <rect x="20" y="98" width="380" height="68"/>
+    <text class="t" x="32" y="120">Domain feature aggregation</text>
+    <text class="s" x="32" y="138">Features with similar roles were grouped together,</text><text class="s" x="32" y="154">advised by technical experts</text></g><g class="node " style="--i:2" aria-label="Random Forest regression: Predicts eight target attributes">
+    <rect x="20" y="196" width="380" height="52"/>
+    <text class="t" x="32" y="218">Random Forest regression</text>
+    <text class="s" x="32" y="236">Predicts eight target attributes</text></g><g class="node dashed" style="--i:3" aria-label="Leave-one-out CV: Each trial held out once and predicted">
+    <rect x="440" y="196" width="180" height="68"/>
+    <text class="t" x="452" y="218">Leave-one-out CV</text>
+    <text class="s" x="452" y="236">Each trial held out</text><text class="s" x="452" y="252">once and predicted</text></g><g class="node " style="--i:4" aria-label="NSGA-II search: Multi-objective search that balances the eight targets">
+    <rect x="20" y="294" width="380" height="52"/>
+    <text class="t" x="32" y="316">NSGA-II search</text>
+    <text class="s" x="32" y="334">Multi-objective search that balances the eight targets</text></g><g class="node " style="--i:5" aria-label="Suggested starting formulation: A starting point for technologists, not a replacement">
+    <rect x="20" y="376" width="380" height="52"/>
+    <text class="t" x="32" y="398">Suggested starting formulation</text>
+    <text class="s" x="32" y="416">A starting point for technologists, not a replacement</text></g><g class="node dashed" style="--i:6" aria-label="One bench test: Broadly similar to the prediction">
+    <rect x="440" y="376" width="180" height="68"/>
+    <text class="t" x="452" y="398">One bench test</text>
+    <text class="s" x="452" y="416">Broadly similar to</text><text class="s" x="452" y="432">the prediction</text></g></svg></div>
+  <figcaption class="note" data-default="Prototype. One bench test, so not general validation.">Prototype. One bench test, so not general validation.</figcaption></figure></div></article></div>
+    <div class="pin" aria-label="Figure for the system in view"><div class="slot" data-slot="rag">
+      <p class="slot-h">Agentic RAG assistant</p><figure class="fig" data-fig="rag"><div class="frame"><svg viewBox="0 0 640 580" role="group" aria-label="Pipeline of the Agentic RAG assistant"><g class="edges"><path class="edge-l" d="M210,60L210,84" marker-end="url(#ah)"/><path class="edge-l" d="M210,136L79,170" marker-end="url(#ah)"/><path class="edge-l" d="M210,136L210,170" marker-end="url(#ah)"/><path class="edge-l" d="M210,136L341,170" marker-end="url(#ah)"/><path class="edge-l" d="M79,222L79,256" marker-end="url(#ah)"/><path class="edge-l" d="M210,222L210,256" marker-end="url(#ah)"/><path class="edge-l" d="M341,222L341,256" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,282L440,282" marker-end="url(#ah)"/><path class="edge-l" d="M210,308L210,342" marker-end="url(#ah)"/><path class="edge-l dashed" d="M440,368L400,368" marker-end="url(#ah)"/><path class="edge-l" d="M210,394L210,428" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,454L440,454" marker-end="url(#ah)"/><path class="edge-l" d="M210,480L210,514" marker-end="url(#ah)"/></g><g class="node " style="--i:0" data-note="q" tabindex="0" aria-label="Question">
+    <rect x="150" y="20" width="120" height="40"/>
+    <text class="t" x="162" y="45">Question</text>
+    </g><g class="node " style="--i:1" data-note="c" tabindex="0" aria-label="Clarifier: Asks follow-ups, records the answers, picks a collection">
+    <rect x="20" y="84" width="380" height="52"/>
+    <text class="t" x="32" y="106">Clarifier</text>
+    <text class="s" x="32" y="124">Asks follow-ups, records the answers, picks a collection</text></g><g class="node " style="--i:2" data-note="r1" tabindex="0" aria-label="Retriever: Knowledge base 1">
+    <rect x="20" y="170" width="118" height="52"/>
+    <text class="t" x="32" y="192">Retriever</text>
+    <text class="s" x="32" y="210">Knowledge base 1</text></g><g class="node " style="--i:3" data-note="r2" tabindex="0" aria-label="Retriever: Knowledge base 2">
+    <rect x="151" y="170" width="118" height="52"/>
+    <text class="t" x="163" y="192">Retriever</text>
+    <text class="s" x="163" y="210">Knowledge base 2</text></g><g class="node " style="--i:4" data-note="r3" tabindex="0" aria-label="Retriever: Knowledge base 3">
+    <rect x="282" y="170" width="118" height="52"/>
+    <text class="t" x="294" y="192">Retriever</text>
+    <text class="s" x="294" y="210">Knowledge base 3</text></g><g class="node " style="--i:5" data-note="h" tabindex="0" aria-label="Hybrid search: BM25 keywords and vectors">
+    <rect x="20" y="256" width="380" height="52"/>
+    <text class="t" x="32" y="278">Hybrid search</text>
+    <text class="s" x="32" y="296">BM25 keywords and vectors</text></g><g class="node dashed removed" style="--i:6" data-note="e" tabindex="0" aria-label="Evaluator agent: Removed after testing">
+    <rect x="440" y="256" width="180" height="52"/>
+    <text class="t" x="452" y="278">Evaluator agent</text>
+    <text class="s" x="452" y="296">Removed after testing</text></g><g class="node " style="--i:7" data-note="k" tabindex="0" aria-label="Cross-encoder rerank: Reorders the combined results">
+    <rect x="20" y="342" width="380" height="52"/>
+    <text class="t" x="32" y="364">Cross-encoder rerank</text>
+    <text class="s" x="32" y="382">Reorders the combined results</text></g><g class="node dashed" style="--i:8" data-note="g" tabindex="0" aria-label="Local GPU: Embeddings and reranker">
+    <rect x="440" y="342" width="180" height="52"/>
+    <text class="t" x="452" y="364">Local GPU</text>
+    <text class="s" x="452" y="382">Embeddings and reranker</text></g><g class="node " style="--i:9" data-note="n" tabindex="0" aria-label="Generator: API model; can search again with a rewritten query">
+    <rect x="20" y="428" width="380" height="52"/>
+    <text class="t" x="32" y="450">Generator</text>
+    <text class="s" x="32" y="468">API model; can search again with a rewritten query</text></g><g class="node dashed" style="--i:10" data-note="l" tabindex="0" aria-label="Langfuse: Traces every run">
+    <rect x="440" y="428" width="180" height="52"/>
+    <text class="t" x="452" y="450">Langfuse</text>
+    <text class="s" x="452" y="468">Traces every run</text></g><g class="node " style="--i:11" data-note="a" tabindex="0" aria-label="Answer with sources: The documents it drew on, listed with every answer">
+    <rect x="20" y="514" width="380" height="52"/>
+    <text class="t" x="32" y="536">Answer with sources</text>
+    <text class="s" x="32" y="554">The documents it drew on, listed with every answer</text></g></svg></div>
+  <figcaption class="note" data-default="Point at any part of the pipeline to see what it does." aria-live="polite">Point at any part of the pipeline to see what it does. </figcaption></figure></div><div class="slot" data-slot="nlp" hidden>
+      <p class="slot-h">Survey NLP app</p><figure class="fig" data-fig="nlp"><div class="frame"><svg class="tc" viewBox="0 0 640 246" role="img" aria-label="First-pass review of about 4,000 responses: Before about 1–2 working days, With the app no more than about 1 hour">
+    <text class="tt" x="20" y="26">First-pass review of about 4,000 responses</text><text class="ts" x="20" y="44">Translation, sentiment analysis and review; estimated working time</text>
+    <g class="">
+      <text class="lab" x="20" y="100">Before</text><text class="ts" x="20" y="117">Before the app</text>
+      <rect class="bar" style="--i:0" x="220" y="88" width="380" height="16"/>
+      <text class="val" x="596" y="124" text-anchor="end">about 1–2 working days</text></g><g class="live">
+      <text class="lab" x="20" y="164">With the app</text><text class="ts" x="20" y="181">Upper bound</text>
+      <rect class="bar" style="--i:1" x="220" y="152" width="23.75" height="16"/>
+      
+      <text class="val" x="253.75" y="164" text-anchor="start">no more than about 1 hour</text></g>
+    <line class="axis" x1="220" x2="600" y1="206" y2="206"/>
+    <line class="axis" x1="220" x2="220" y1="206" y2="211"/><text class="tick" x="220" y="226" text-anchor="middle">0</text><line class="axis" x1="410" x2="410" y1="206" y2="211"/><text class="tick" x="410" y="226" text-anchor="middle">1 day</text><line class="axis" x1="600" x2="600" y1="206" y2="211"/><text class="tick" x="600" y="226" text-anchor="middle">2 days</text></svg></div></figure></div><div class="slot" data-slot="records" hidden>
+      <p class="slot-h">Product record platform</p><figure class="fig" data-fig="records"><div class="frame"><svg class="tc" viewBox="0 0 640 246" role="img" aria-label="A typical record-location and comparison task: Before about 1 hour, After about 5–15 minutes">
+    <text class="tt" x="20" y="26">A typical record-location and comparison task</text><text class="ts" x="20" y="44">Time per task in minutes, my estimate</text>
+    <g class="">
+      <text class="lab" x="20" y="100">Before</text><text class="ts" x="20" y="117">Excel files</text>
+      <rect class="bar" style="--i:0" x="220" y="88" width="380" height="16"/>
+      
+      <text class="val" x="596" y="124" text-anchor="end">about 1 hour</text></g><g class="live">
+      <text class="lab" x="20" y="164">After</text><text class="ts" x="20" y="181">Search app</text>
+      <rect class="bar" style="--i:1" x="220" y="152" width="95" height="16"/>
+      <text class="val" x="325" y="164" text-anchor="start">about 5–15 minutes</text></g>
+    <line class="axis" x1="220" x2="600" y1="206" y2="206"/>
+    <line class="axis" x1="220" x2="220" y1="206" y2="211"/><text class="tick" x="220" y="226" text-anchor="middle">0</text><line class="axis" x1="315" x2="315" y1="206" y2="211"/><text class="tick" x="315" y="226" text-anchor="middle">15</text><line class="axis" x1="410" x2="410" y1="206" y2="211"/><text class="tick" x="410" y="226" text-anchor="middle">30</text><line class="axis" x1="505" x2="505" y1="206" y2="211"/><text class="tick" x="505" y="226" text-anchor="middle">45</text><line class="axis" x1="600" x2="600" y1="206" y2="211"/><text class="tick" x="600" y="226" text-anchor="middle">60</text></svg></div>
+  <figcaption class="note" data-default="Behind the search, about 50 Excel datasets became 13 PostgreSQL tables.">Behind the search, about 50 Excel datasets became 13 PostgreSQL tables.</figcaption></figure></div><div class="slot" data-slot="platform" hidden>
+      <p class="slot-h">App platform</p><figure class="fig" data-fig="platform"><div class="frame"><svg viewBox="0 0 640 378" role="group" aria-label="How the app platform serves its users"><g class="edges"><path class="edge-l" d="M210,68L210,98" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,124L440,124" marker-end="url(#ah)"/><path class="edge-l" d="M210,166L210,196" marker-end="url(#ah)"/><path class="edge-l" d="M210,264L210,294" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,320L440,320" marker-end="url(#ah)"/></g><g class="node " style="--i:0" aria-label="Users: About 300 accounts; 80 active monthly users">
+    <rect x="20" y="16" width="380" height="52"/>
+    <text class="t" x="32" y="38">Users</text>
+    <text class="s" x="32" y="56">About 300 accounts; 80 active monthly users</text></g><g class="node " style="--i:1" aria-label="ShinyProxy: One sign-in for every app Group-based app access, managed in one configuration">
+    <rect x="20" y="98" width="380" height="68"/>
+    <text class="t" x="32" y="120">ShinyProxy</text>
+    <text class="s" x="32" y="138">One sign-in for every app</text><text class="s" x="32" y="154">Group-based app access, managed in one configuration</text></g><g class="node dashed" style="--i:2" aria-label="Monitoring app: Reads ShinyProxy logs for troubleshooting">
+    <rect x="440" y="98" width="180" height="68"/>
+    <text class="t" x="452" y="120">Monitoring app</text>
+    <text class="s" x="452" y="138">Reads ShinyProxy logs</text><text class="s" x="452" y="154">for troubleshooting</text></g><g class="node " style="--i:3" aria-label="Podman: Starts an app’s container when someone opens it Stops when idle; keeps the most frequented apps warm">
+    <rect x="20" y="196" width="380" height="68"/>
+    <text class="t" x="32" y="218">Podman</text>
+    <text class="s" x="32" y="236">Starts an app’s container when someone opens it</text><text class="s" x="32" y="252">Stops when idle; keeps the most frequented apps warm</text></g><g class="node " style="--i:4" aria-label="15–20 containerized apps: One container per session, or shared for read-only apps">
+    <rect x="20" y="294" width="380" height="52"/>
+    <text class="t" x="32" y="316">15–20 containerized apps</text>
+    <text class="s" x="32" y="334">One container per session, or shared for read-only apps</text></g><g class="node dashed" style="--i:5" aria-label="Weekly backups: Automated SQL database backups">
+    <rect x="440" y="294" width="180" height="68"/>
+    <text class="t" x="452" y="316">Weekly backups</text>
+    <text class="s" x="452" y="334">Automated SQL</text><text class="s" x="452" y="350">database backups</text></g></svg></div>
+    </figure></div><div class="slot" data-slot="gpu" hidden>
+      <p class="slot-h">Local inference stack</p><figure class="fig" data-fig="gpu"><div class="frame"><svg viewBox="0 0 640 428" role="group" aria-label="How the local inference stack serves the assistant and coding tasks"><g class="edges"><path class="edge-l dashed" d="M400,42L440,42" marker-end="url(#ah)"/><path class="edge-l" d="M210,68L210,98" marker-end="url(#ah)"/><path class="edge-l" d="M210,150L210,180" marker-end="url(#ah)"/><path class="edge-l" d="M440,206L400,206" marker-end="url(#ah)"/><path class="edge-l" d="M210,248L210,278" marker-end="url(#ah)"/><path class="edge-l" d="M210,330L210,360" marker-end="url(#ah)"/></g><g class="node " style="--i:0" aria-label="Agentic RAG assistant: Search runs locally; answers come from the API">
+    <rect x="20" y="16" width="380" height="52"/>
+    <text class="t" x="32" y="38">Agentic RAG assistant</text>
+    <text class="s" x="32" y="56">Search runs locally; answers come from the API</text></g><g class="node dashed" style="--i:1" aria-label="External API: Answer generation">
+    <rect x="440" y="16" width="180" height="52"/>
+    <text class="t" x="452" y="38">External API</text>
+    <text class="s" x="452" y="56">Answer generation</text></g><g class="node " style="--i:2" aria-label="Container Warm-up request: Sent on app open; hides a 40–60 s load">
+    <rect x="20" y="98" width="380" height="52"/>
+    <text class="t" x="32" y="120">Container Warm-up request</text>
+    <text class="s" x="32" y="138">Sent on app open; hides a 40–60 s load</text></g><g class="node " style="--i:3" aria-label="llama-swap: One OpenAI-compatible endpoint on one port Starts the model containers on demand">
+    <rect x="20" y="180" width="380" height="68"/>
+    <text class="t" x="32" y="202">llama-swap</text>
+    <text class="s" x="32" y="220">One OpenAI-compatible endpoint on one port</text><text class="s" x="32" y="236">Starts the model containers on demand</text></g><g class="node " style="--i:4" aria-label="IDE assistant: Simple coding tasks run locally">
+    <rect x="440" y="180" width="180" height="68"/>
+    <text class="t" x="452" y="202">IDE assistant</text>
+    <text class="s" x="452" y="220">Simple coding tasks</text><text class="s" x="452" y="236">run locally</text></g><g class="node " style="--i:5" aria-label="vLLM in Podman, on a local GPU">
+    <rect x="20" y="278" width="380" height="52"/>
+    <text class="t" x="32" y="300">vLLM in Podman, on a local GPU</text>
+    </g><g class="node " style="--i:6" aria-label="Embeddings and reranker: Used by RAG hybrid search">
+    <rect x="20" y="360" width="380" height="52"/>
+    <text class="t" x="32" y="382">Embeddings and reranker</text>
+    <text class="s" x="32" y="400">Used by RAG hybrid search</text></g></svg></div>
+  </figure></div><div class="slot" data-slot="mengo" hidden>
+      <p class="slot-h">Mengo</p><figure class="fig" data-fig="mengo"><div class="frame"><svg viewBox="0 0 640 526" role="group" aria-label="Mengo’s loop for each ticket"><g class="edges"><path class="edge-l" d="M210,68L210,98" marker-end="url(#ah)"/><path class="edge-l" d="M210,150L210,180" marker-end="url(#ah)"/><path class="edge-l" d="M210,232L210,262" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,288L440,288" marker-end="url(#ah)"/><path class="edge-l" d="M210,330L210,360" marker-end="url(#ah)"/><path class="edge-l" d="M210,428L210,458" marker-end="url(#ah)"/></g><g class="node " style="--i:0" aria-label="Spec: The change you want">
+    <rect x="20" y="16" width="380" height="52"/>
+    <text class="t" x="32" y="38">Spec</text>
+    <text class="s" x="32" y="56">The change you want</text></g><g class="node " style="--i:1" aria-label="Tickets: With acceptance criteria">
+    <rect x="20" y="98" width="380" height="52"/>
+    <text class="t" x="32" y="120">Tickets</text>
+    <text class="s" x="32" y="138">With acceptance criteria</text></g><g class="node " style="--i:2" aria-label="Implement: An agent reads the ticket and changes the code using a TDD skill">
+    <rect x="20" y="180" width="380" height="52"/>
+    <text class="t" x="32" y="202">Implement</text>
+    <text class="s" x="32" y="220">An agent reads the ticket and changes the code using a TDD skill</text></g><g class="node " style="--i:3" aria-label="Check: Runs deterministic checks set beforehand in mengo.toml; the implementer repairs required checks that newly fail">
+    <rect x="20" y="262" width="380" height="68"/>
+    <text class="t" x="32" y="284">Check</text>
+    <text class="s" x="32" y="302">Runs deterministic checks set beforehand in mengo.toml;</text><text class="s" x="32" y="318">the implementer repairs required checks that newly fail</text></g><g class="node dashed" style="--i:4" aria-label="Repair budget: Three rounds per ticket by default">
+    <rect x="440" y="262" width="180" height="68"/>
+    <text class="t" x="452" y="284">Repair budget</text>
+    <text class="s" x="452" y="302">Three rounds per</text><text class="s" x="452" y="318">ticket by default</text></g><g class="node " style="--i:5" aria-label="Review: A second agent reviews the change against the ticket and the repo’s coding standards, and fixes problems">
+    <rect x="20" y="360" width="380" height="68"/>
+    <text class="t" x="32" y="382">Review</text>
+    <text class="s" x="32" y="400">A second agent reviews the change against</text><text class="s" x="32" y="416">the ticket and the repo’s coding standards, and fixes problems</text></g><g class="node " style="--i:6" aria-label="Commit: One local commit per ticket">
+    <rect x="20" y="458" width="380" height="52"/>
+    <text class="t" x="32" y="480">Commit</text>
+    <text class="s" x="32" y="498">One local commit per ticket.</text></g></svg></div>
+ </figure></div><div class="slot" data-slot="formulation" hidden>
+      <p class="slot-h">Formulation optimizer</p><figure class="fig" data-fig="formulation"><div class="frame"><svg viewBox="0 0 640 460" role="group" aria-label="How the formulation optimizer suggests a starting point"><g class="edges"><path class="edge-l" d="M210,68L210,98" marker-end="url(#ah)"/><path class="edge-l" d="M210,166L210,196" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,222L440,222" marker-end="url(#ah)"/><path class="edge-l" d="M210,248L210,294" marker-end="url(#ah)"/><path class="edge-l" d="M210,346L210,376" marker-end="url(#ah)"/><path class="edge-l dashed" d="M400,402L440,402" marker-end="url(#ah)"/></g><g class="node " style="--i:0" aria-label="40 data points: 100 features">
+    <rect x="20" y="16" width="380" height="52"/>
+    <text class="t" x="32" y="38">40 data points</text>
+    <text class="s" x="32" y="56">100 features</text></g><g class="node " style="--i:1" aria-label="Domain feature aggregation: Features with similar roles were grouped together, advised by technical experts">
+    <rect x="20" y="98" width="380" height="68"/>
+    <text class="t" x="32" y="120">Domain feature aggregation</text>
+    <text class="s" x="32" y="138">Features with similar roles were grouped together,</text><text class="s" x="32" y="154">advised by technical experts</text></g><g class="node " style="--i:2" aria-label="Random Forest regression: Predicts eight target attributes">
+    <rect x="20" y="196" width="380" height="52"/>
+    <text class="t" x="32" y="218">Random Forest regression</text>
+    <text class="s" x="32" y="236">Predicts eight target attributes</text></g><g class="node dashed" style="--i:3" aria-label="Leave-one-out CV: Each trial held out once and predicted">
+    <rect x="440" y="196" width="180" height="68"/>
+    <text class="t" x="452" y="218">Leave-one-out CV</text>
+    <text class="s" x="452" y="236">Each trial held out</text><text class="s" x="452" y="252">once and predicted</text></g><g class="node " style="--i:4" aria-label="NSGA-II search: Multi-objective search that balances the eight targets">
+    <rect x="20" y="294" width="380" height="52"/>
+    <text class="t" x="32" y="316">NSGA-II search</text>
+    <text class="s" x="32" y="334">Multi-objective search that balances the eight targets</text></g><g class="node " style="--i:5" aria-label="Suggested starting formulation: A starting point for technologists, not a replacement">
+    <rect x="20" y="376" width="380" height="52"/>
+    <text class="t" x="32" y="398">Suggested starting formulation</text>
+    <text class="s" x="32" y="416">A starting point for technologists, not a replacement</text></g><g class="node dashed" style="--i:6" aria-label="One bench test: Broadly similar to the prediction">
+    <rect x="440" y="376" width="180" height="68"/>
+    <text class="t" x="452" y="398">One bench test</text>
+    <text class="s" x="452" y="416">Broadly similar to</text><text class="s" x="452" y="432">the prediction</text></g></svg></div>
+  <figcaption class="note" data-default="Prototype. One bench test, so not general validation.">Prototype. One bench test, so not general validation.</figcaption></figure></div></div>
+  </div>
+</section>
+</main>
+
+  <footer>
+    <span>Joel Lee · Singapore</span>
+    <nav aria-label="Footer">
+      <a href="https://www.linkedin.com/in/joellee3433b221a" rel="noopener">LinkedIn</a>
+      <a href="mailto:cryptic912@gmail.com">Email</a>
+      <button class="theme" type="button" id="theme"></button>
+    </nav>
+  </footer>
+</div>
+
+<script>
+// Pipeline parts explain themselves in their own figure's caption; leaving the figure restores the caption.
+const NOTES = {
+  "q": "A staff member asks in everyday words.",
+  "c": "The clarifier asks follow-up questions when they’re needed, records the answers, and picks which knowledge base to search.",
+  "r1": "One retriever per knowledge base. A single retriever over all three often returned chunks from the wrong kind of document.",
+  "r2": "One retriever per knowledge base. A single retriever over all three often returned chunks from the wrong kind of document.",
+  "r3": "One retriever per knowledge base. A single retriever over all three often returned chunks from the wrong kind of document.",
+  "h": "BM25 keyword search and vector search.",
+  "e": "<b>Removed on evidence.</b> An LLM evaluator step added latency and token cost; on synthetic, LLM-labeled questions, retrieval scored about the same without it.",
+  "k": "<b>The step that moved the numbers.</b> Adding the reranker lifted precision, recall and nDCG@8 from about 0.6 to about 0.7 on synthetic, LLM-labeled questions.",
+  "g": "Embeddings and the reranker run on a local GPU behind one endpoint, loaded when the app opens to hide the cold start.",
+  "n": "An API model writes the answer, and can search again with a rewritten query.",
+  "l": "Langfuse traces every run, with an LLM judge and thumbs feedback from users.",
+  "a": "Every answer lists the documents it drew on."
+};
+function showNote(g, fig) {
+  fig = fig || g?.closest('.fig');
+  if (!fig) return;
+  const note = fig.querySelector('.note');
+  fig.querySelectorAll('.node.on').forEach((n) => n.classList.remove('on'));
+  if (!g) { note.innerHTML = note.dataset.default; return; }
+  g.classList.add('on');
+  note.innerHTML = NOTES[g.dataset.note];
+}
+document.addEventListener('pointerover', (e) => { const g = e.target.closest?.('.node[data-note]'); if (g) showNote(g); });
+document.addEventListener('focusin', (e) => { const g = e.target.closest?.('.node[data-note]'); if (g) showNote(g); });
+document.addEventListener('pointerout', (e) => {
+  const fig = e.target.closest?.('.fig');
+  if (fig && !fig.contains(e.relatedTarget) && !fig.contains(document.activeElement)) showNote(null, fig);
+});
+document.addEventListener('focusout', (e) => {
+  const fig = e.target.closest?.('.fig');
+  if (fig && !fig.contains(e.relatedTarget)) showNote(null, fig);
+});
+
+// The pair crossing the reading line (45% of the viewport) owns the pinned figure.
+const pairs = [...document.querySelectorAll('.pair')];
+const slots = [...document.querySelectorAll('.slot')];
+const io = new IntersectionObserver((entries) => {
+  entries.filter((en) => en.isIntersecting).forEach((en) => {
+    const id = en.target.dataset.id;
+    pairs.forEach((p) => p.classList.toggle('on', p === en.target));
+    slots.forEach((sl) => { sl.hidden = sl.dataset.slot !== id; });
+  });
+}, { rootMargin: '-45% 0px -54% 0px' });
+pairs.forEach((p) => io.observe(p));
+
+// Theme follows the system until the visitor flips it.
+const themeBtn = document.getElementById('theme');
+const isDark = () => (document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches);
+const labelTheme = () => (themeBtn.textContent = isDark() ? 'Light theme' : 'Dark theme');
+themeBtn.addEventListener('click', () => { document.documentElement.dataset.theme = isDark() ? 'light' : 'dark'; labelTheme(); });
+labelTheme();
+</script>
+</body>
+</html>
