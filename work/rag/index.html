@@ -49,7 +49,7 @@
       <text class="val m-fade" x="348" y="90" style="--d:1300">about 0.6</text><text class="name m-fade" x="24" y="168" style="--d:140">Evaluator removed</text>
       <line class="track m-draw" x1="170" y1="164" x2="440" y2="164" style="--d:180"/>
       <circle class="dot" cx="332" cy="164" r="5" style="--dx:-162.0px; --d:580"/>
-      <text class="val m-fade" x="348" y="154" style="--d:1480">about 0.6</text><text class="name lead m-fade" x="24" y="232" style="--d:220">Reranker added</text>
+      <text class="val m-fade" x="348" y="154" style="--d:1480">about 0.6</text><text class="name lead m-fade" x="24" y="232" style="--d:220">Cross-encoder reranker</text>
       <line class="track m-draw" x1="170" y1="228" x2="440" y2="228" style="--d:260"/>
       <line class="was m-fade" x1="332" y1="222" x2="332" y2="234" style="--d:1500"/>
         <line class="gain m-draw" x1="332" y1="228" x2="359" y2="228" style="--d:1700"/>
@@ -91,10 +91,10 @@
           <g class="edge aside" data-link="answer langfuse"><path d="M440 638H464"/><path class="head" d="M464 633.5L472 638L464 642.5Z"/></g>
 
           <g class="node" data-node="question"><rect x="160" y="16" width="160" height="40"/><text class="t" x="240" y="41" text-anchor="middle">Question</text></g>
-          <g class="node" data-node="clarifier"><rect x="40" y="100" width="400" height="60"/><text class="t" x="56" y="125">Clarifier</text><text class="s" x="56" y="146">Asks follow-ups, records the answers, picks a collection</text></g>
-          <g class="node" data-node="retrievers"><rect x="40" y="196" width="125.3" height="60"/><text class="t" x="52" y="221">Retriever</text><text class="s" x="52" y="242">Collection 1</text></g>
-          <g class="node" data-node="retrievers"><rect x="177.3" y="196" width="125.3" height="60"/><text class="t" x="189.3" y="221">Retriever</text><text class="s" x="189.3" y="242">Collection 2</text></g>
-          <g class="node" data-node="retrievers"><rect x="314.7" y="196" width="125.3" height="60"/><text class="t" x="326.7" y="221">Retriever</text><text class="s" x="326.7" y="242">Collection 3</text></g>
+          <g class="node" data-node="clarifier"><rect x="40" y="100" width="400" height="60"/><text class="t" x="56" y="125">Clarifier</text><text class="s" x="56" y="146">Asks follow-ups, records answers, picks a knowledge base</text></g>
+          <g class="node" data-node="retrievers"><rect x="40" y="196" width="125.3" height="60"/><text class="t" x="47" y="221">Retriever</text><text class="s" x="47" y="242">Knowledge base 1</text></g>
+          <g class="node" data-node="retrievers"><rect x="177.3" y="196" width="125.3" height="60"/><text class="t" x="184.3" y="221">Retriever</text><text class="s" x="184.3" y="242">Knowledge base 2</text></g>
+          <g class="node" data-node="retrievers"><rect x="314.7" y="196" width="125.3" height="60"/><text class="t" x="321.7" y="221">Retriever</text><text class="s" x="321.7" y="242">Knowledge base 3</text></g>
           <g class="node" data-node="hybrid"><rect x="40" y="296" width="400" height="60"/><text class="t" x="56" y="321">Hybrid search</text><text class="s" x="56" y="342">BM25 keywords and vectors</text></g>
           <g class="node" data-node="rerank"><rect x="40" y="396" width="400" height="60"/><text class="t" x="56" y="421">Cross-encoder rerank</text><text class="s" x="56" y="442">Reorders the combined results</text></g>
           <g class="node" data-node="generator"><rect x="40" y="508" width="400" height="60"/><text class="t" x="56" y="533">Generator</text><text class="s" x="56" y="554">API model; can search again with a rewritten query</text></g>
@@ -111,7 +111,7 @@
       <section data-nodes="" aria-labelledby="problem">
         <h2 id="problem">The problem</h2>
         <p>Sensory methods were scattered across long technical literature, internal documents and legacy slide decks. New colleagues had to find them for the first time, and busy ones had to recall them quickly.</p>
-        <p>The material comes in three kinds: textbooks, internal knowledge (including the slide decks) and a third type of document. A single retriever over all of it often returned chunks from the wrong kind, so I split it into three collections.</p>
+        <p>The material comes in three kinds: textbooks, internal knowledge (including the slide decks) and a third type of document. A single retriever over all of it often returned chunks from the wrong kind, so I split it into three knowledge bases.</p>
         <p>People also describe products in everyday words, while the team works in a fixed sensory vocabulary, its lexicon. New joiners don’t know the lexicon yet, and experienced colleagues still need to recall which terms fit, so a useful answer often needs that translation too.</p>
       </section>
 
@@ -129,8 +129,8 @@
         </div>
         <div class="step" data-nodes="retrievers hybrid rerank gpu">
           <h3>Retrieve</h3>
-          <p>Each retriever has its own collection and runs the same pipeline: <span class="term" data-node="hybrid">BM25 keyword search and vector search,</span> then a <span class="term" data-node="rerank">cross-encoder</span> reranks the combined results.</p>
-          <p>The embedding model and the reranker run on a <span class="term" data-node="gpu">local GPU</span>, behind one OpenAI-compatible endpoint. The app sends a warm-up request when it opens, so the 40–60 second model load happens before the first question instead of during it to reduce user perceived latency.</p>
+          <p>Each retriever has its own knowledge base and runs the same pipeline: <span class="term" data-node="hybrid">BM25 keyword search and vector search,</span> then a <span class="term" data-node="rerank">cross-encoder</span> reranks the combined results.</p>
+          <p>The embedding model and the reranker run on a <span class="term" data-node="gpu">local GPU</span>, behind one OpenAI-compatible endpoint. The app sends a warm-up request when it opens, so the 40–60 second model load happens before the first question instead of during it to reduce user-perceived latency.</p>
         </div>
         <div class="step" data-nodes="generator answer hybrid">
           <h3>Answer</h3>
@@ -139,7 +139,7 @@
         </div>
         <div class="step" data-nodes="langfuse generator answer">
           <h3>Evals</h3>
-          <p>Self-hosted <span class="term" data-node="langfuse">Langfuse</span> traces every run. A LLM judge reads the question, the retrieved chunks and the answer, and labels the answer grounded, somewhat grounded or not grounded; it asks three different models and combines the results. Users can rate answers with a thumbs up or down, stored next to the trace. Together they show when answers go wrong, without relying on anecdotes.</p>
+          <p>Self-hosted <span class="term" data-node="langfuse">Langfuse</span> traces every run. An LLM judge reads the question, the retrieved chunks and the answer, and labels the answer grounded, somewhat grounded or not grounded; it asks three different models and combines the results. Users can rate answers with a thumbs up or down, stored next to the trace. Together they show when answers go wrong, without relying on anecdotes.</p>
         </div>
       </section>
 
@@ -151,7 +151,7 @@
           <p class="run"><b>Result.</b> Removing it took its LLM calls out of every query, cutting latency and token cost. The lesson I took: a cheaper, deterministic component beat an extra LLM step, so measure before adding agents.</p>
         </div>
         <div class="step" data-nodes="clarifier retrievers">
-          <h3>Routed each question to one collection</h3>
+          <h3>Routed each question to one knowledge base</h3>
           <p>One retriever over mixed sources kept returning chunks from the wrong kind of document. Rather than ask users to know where information lives, the clarifier now routes each question for them.</p>
         </div>
         <div class="step" data-nodes="gpu generator langfuse">
@@ -163,7 +163,7 @@
 
       <section data-nodes="hybrid rerank evaluator" aria-labelledby="evidence">
         <h2 id="evidence">Evidence</h2>
-        <p>I compared three retrieval pipelines on the same questions. All three used the routed collections and started from hybrid search.</p>
+        <p>I compared three retrieval pipelines on the same questions. All three used the routed knowledge bases and started from hybrid search.</p>
         <ol class="dots" aria-label="Retrieval quality by pipeline, on a scale from 0 to 1">
           <li><span class="name">ColBERT rerank and evaluator agent<small>Pipeline 1</small></span><span class="track"><i style="left: 60%"></i><b style="left: 60%">about 0.6</b></span></li>
           <li><span class="name">ColBERT rerank only<small>Pipeline 2</small></span><span class="track"><i style="left: 60%"></i><b style="left: 60%">about 0.6</b></span></li>

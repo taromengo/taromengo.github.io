@@ -39,7 +39,7 @@
   <div class="hero">
     <header class="intro">
       <h1>Centralized App platform</h1>
-      <p class="used">Roughly 80 users a month</p>
+      <p class="used">80 users a month</p>
       <p class="lede">Hundreds of accounts reach 15–20 internal analytics apps through one sign-in, instead of a scattered set of links.</p>
       <p class="meta">Live. I set up the server, containerized every app on it, and run the platform.</p>
     </header>
@@ -74,7 +74,7 @@
 
           <g class="node" data-node="users"><rect x="40" y="16" width="400" height="60"/><text class="t" x="56" y="41">Users</text><text class="s" x="56" y="62">300 accounts; 80 active monthly users</text></g>
           <g class="node" data-node="proxy"><rect x="40" y="136" width="400" height="76"/><text class="t" x="56" y="161">ShinyProxy</text><text class="s" x="56" y="182">One sign-in for every app</text><text class="s" x="56" y="198">Group-based app access, managed in one configuration</text></g>
-          <g class="node" data-node="podman"><rect x="40" y="248" width="400" height="76"/><text class="t" x="56" y="273">Podman</text><text class="s" x="56" y="294">Starts an app’s container when someone opens it</text><text class="s" x="56" y="310">Stops when idle; keeps the most frequented apps warm</text></g>
+          <g class="node" data-node="podman"><rect x="40" y="248" width="400" height="76"/><text class="t" x="56" y="273">Podman</text><text class="s" x="56" y="294">Starts an app’s container when someone opens it</text><text class="s" x="56" y="310">Stops when idle; keeps the most-used apps warm</text></g>
           <g class="node" data-node="session"><rect x="40" y="360" width="194" height="76"/><text class="t" x="52" y="385">App container</text><text class="s" x="52" y="406">Started for one user’s</text><text class="s" x="52" y="422">session</text></g>
           <g class="node" data-node="shared"><rect x="246" y="360" width="194" height="76"/><text class="t" x="258" y="385">Shared container</text><text class="s" x="258" y="406">Frequently used read-only</text><text class="s" x="258" y="422">apps; users share one</text></g>
 
@@ -96,7 +96,7 @@
 
       <section data-nodes="" aria-labelledby="owned">
         <h2 id="owned">What I owned</h2>
-        <p>The whole SDLC. I set up the self-hosted server, containerized every app it hosts, and configured ShinyProxy, including who can open which app. I also introduced the Git workflow, built the monitoring app and set up weekly log backups.</p>
+        <p>The whole SDLC. I set up the self-hosted server, containerized every app it hosts, and configured ShinyProxy, including who can open which app. I also introduced the Git workflow, built the monitoring app and set up weekly database backups.</p>
       </section>
 
       <section data-nodes="" aria-labelledby="how">
@@ -105,11 +105,11 @@
           <h3>One sign-in, access by group</h3>
           <p>Everyone signs in once to <span class="term" data-node="proxy">ShinyProxy</span> and sees the apps their group is allowed to open. Group access for every app lives in one configuration, so access is managed in one place.</p>
         </div>
-        <div class="step" data-nodes="proxy podman session apps">
+        <div class="step" data-nodes="proxy podman session">
           <h3>Containers only while someone is working</h3>
           <p>Each of the 15–20 apps runs in its own container. When someone opens an app, ShinyProxy has <span class="term" data-node="podman">Podman</span> start its container. After the user logs out or goes inactive, the container stops, so idle apps hold no server resources. The most-used apps keep warm containers ready, so they open without the usual start-up wait.</p>
         </div>
-        <div class="step" data-nodes="podman shared apps">
+        <div class="step" data-nodes="podman shared">
           <h3>Shared containers for busy read-only apps</h3>
           <p>Frequently used read-only apps run in a <span class="term" data-node="shared">shared container</span>. Concurrent users of one of those apps share a container instead of each starting their own to reduce resource usage.</p>
         </div>
@@ -122,19 +122,19 @@
           <p>Starting every app on demand saves server capacity, but people wait while the container starts. I monitored which apps were used most and gave those warm containers through ShinyProxy’s pre-initialization feature.</p>
           <p class="run"><b>Trade-off.</b> A warm container holds resources even when no one is using it, so I keep them only for the busiest apps. The rest still use nothing when idle.</p>
         </div>
-        <div class="step" data-nodes="shared podman apps">
+        <div class="step" data-nodes="shared podman">
           <h3>Share containers only for read-only apps</h3>
           <p>One container per user is the safe default, but it multiplies load when many people open the same app. For frequently used read-only apps, I let concurrent users share one container.</p>
           <p class="run"><b>Trade-off.</b> Sharing is only safe when one user cannot affect another, so I share containers only for read-only apps that hold no state between users, and Shiny keeps each user’s session separate on the app’s server. Sharing has caused no problems so far.</p>
         </div>
       </section>
 
-      <section data-nodes="users apps" aria-labelledby="evidence">
+      <section data-nodes="users session shared" aria-labelledby="evidence">
         <h2 id="evidence">Evidence</h2>
         <ul>
           <li>300 provisioned accounts</li>
-          <li>80 users a month.</li>
-          <li>15–20 containerized apps hosted.</li>
+          <li>80 users a month</li>
+          <li>15–20 containerized apps hosted</li>
         </ul>
       </section>
     </div>

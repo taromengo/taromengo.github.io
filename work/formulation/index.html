@@ -65,7 +65,7 @@
     <figure class="fig">
       <div class="frame">
         <svg viewBox="0 0 652 800" role="img" aria-labelledby="flow-title">
-          <title id="flow-title">Prototype flow: 40 data points with 100 features each, more features than data points. Ingredients with similar functional roles are grouped into fewer features, with advice from technologists. Random Forest regression predicts eight target attributes and is checked with leave-one-out cross-validation. NSGA-II searches for a formulation that balances the targets and suggests a starting formulation. One bench test found the measured profile broadly similar to the prediction, with differences consistent with the model's expected error.</title>
+          <title id="flow-title">Prototype flow: 40 data points with 100 features each, more features than data points. Ingredients with similar functional roles are grouped into fewer features, with advice from domain experts. Random Forest regression predicts eight target attributes and is checked with leave-one-out cross-validation. NSGA-II searches for a formulation that balances the targets and suggests a starting formulation. One bench test found the measured profile broadly similar to the prediction, with differences consistent with the model's expected error.</title>
 
           <text class="proto" x="8" y="20">PROTOTYPE</text>
           <text class="proto-note" x="100" y="20">Proof of concept, not a production model</text>
@@ -91,7 +91,7 @@
             <text class="s" x="318" y="188">data points</text>
           </g>
           <g class="node" data-node="agg"><rect x="40" y="280" width="400" height="76"/><text class="t" x="56" y="305">Domain feature aggregation</text><text class="s" x="56" y="326">Ingredients with similar functional roles</text><text class="s" x="56" y="342">grouped into fewer features</text></g>
-          <g class="node" data-node="tech"><rect x="472" y="280" width="160" height="76"/><text class="t" x="484" y="305">Technologists</text><text class="s" x="484" y="326">Advised which</text><text class="s" x="484" y="342">roles belong together</text></g>
+          <g class="node" data-node="tech"><rect x="472" y="280" width="160" height="76"/><text class="t" x="484" y="305">Domain experts</text><text class="s" x="484" y="326">Advised which</text><text class="s" x="484" y="342">roles belong together</text></g>
           <g class="node" data-node="rf">
             <rect x="40" y="392" width="400" height="60"/>
             <text class="t" x="56" y="417">Random Forest regression</text>
@@ -123,7 +123,7 @@
         <h2 id="how">How it works</h2>
         <div class="step" data-nodes="data agg tech">
           <h3>Shrink the inputs</h3>
-          <p>Rather than feed the model all of the original features, I grouped ingredients with similar functional roles into <span class="term" data-node="agg">fewer, broader features</span>. I worked out the groups by consulting <span class="term" data-node="tech">expert technologists</span>, so each group means something to the people who would use the result.</p>
+          <p>Rather than feed the model all of the original features, I grouped ingredients with similar functional roles into <span class="term" data-node="agg">fewer, broader features</span>. I worked out the groups by consulting <span class="term" data-node="tech">domain experts</span>, so each group means something to the people who would use the result.</p>
         </div>
         <div class="step" data-nodes="rf loocv">
           <h3>Predict the targets</h3>
@@ -135,7 +135,7 @@
         </div>
         <div class="step" data-nodes="suggestion bench rf">
           <h3>Check one at the bench</h3>
-          <p>Using the models and algorithms produced, a prototype was chosen based on the least RMSE and MAE against the targets, together with a technologist's judgement on the formulation. This formulation was then made and tested. Its <span class="term" data-node="bench">measured profile</span> was broadly similar to the prediction, with differences consistent with the model’s expected error.</p>
+          <p>Using the models and algorithms produced, a prototype was chosen based on the least RMSE and MAE against the targets, together with a domain expert’s judgment on the formulation. This formulation was then made and tested. Its <span class="term" data-node="bench">measured profile</span> was broadly similar to the prediction, with differences consistent with the model’s expected error.</p>
         </div>
       </section>
 

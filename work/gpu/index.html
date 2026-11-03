@@ -73,7 +73,7 @@
     <figure class="fig">
       <div class="frame">
         <svg viewBox="0 0 652 540" role="img" aria-labelledby="arch-title">
-          <title id="arch-title">Architecture: the Agentic RAG assistant, a self-hosted Langfuse assistant and an IDE coding assistant call one OpenAI-compatible endpoint, run by llama-swap, which starts vLLM containers in Podman on a local GPU on demand. The containers serve an embedding model, a reranker and a local Qwen model. The RAG assistant sends a warm-up request when it opens, to hide a 40–60 second cold start. Answer generation and the LLM judge stay on an external API.</title>
+          <title id="arch-title">Architecture: the Agentic RAG assistant, a self-hosted Langfuse assistant and an IDE coding assistant call one OpenAI-compatible endpoint, run by llama-swap, which starts vLLM containers in Podman on a local GPU on demand. The containers serve an embedding model, a reranker and a local coding agent. The RAG assistant sends a warm-up request when it opens, to hide a 40–60 second cold start. Answer generation and the LLM judge stay on an external API.</title>
 
           <g class="edge" data-link="ragapp api"><path d="M444 54H468"/><path class="head" d="M468 49.5L476 54L468 58.5Z"/></g>
           <g class="edge" data-link="langfuseapp llamaswap"><path d="M110 92V236"/><path class="head" d="M105.5 236L110 244L114.5 236Z"/></g>
@@ -92,7 +92,7 @@
           <g class="node" data-node="podman"><rect x="16" y="360" width="428" height="164"/><text class="t" x="28" y="385">vLLM in Podman, on a local GPU</text><text class="s" x="28" y="406">Quantized open-weight models</text></g>
           <g class="node" data-node="embed"><rect x="28" y="424" width="128" height="84"/><text class="t" x="40" y="449">Embeddings</text><text class="s" x="40" y="470">BGE-M3</text><text class="s" x="40" y="486">Hybrid search</text></g>
           <g class="node" data-node="rerank"><rect x="166" y="424" width="128" height="84"/><text class="t" x="178" y="449">Reranker</text><text class="s" x="178" y="470">Cross-encoder</text><text class="s" x="178" y="486">Hybrid search</text></g>
-          <g class="node" data-node="qwen"><rect x="304" y="424" width="128" height="84"/><text class="t" x="316" y="449">Local Qwen</text><text class="s" x="316" y="470">Simple, repetitive</text><text class="s" x="316" y="486">tasks</text></g>
+          <g class="node" data-node="coder"><rect x="304" y="424" width="128" height="84"/><text class="t" x="316" y="449">Coding agent</text><text class="s" x="316" y="470">Local; simple,</text><text class="s" x="316" y="486">repetitive tasks</text></g>
         </svg>
       </div>
     </figure>
@@ -100,13 +100,13 @@
     <div class="text">
       <section data-nodes="api ragapp langfuseapp" aria-labelledby="problem">
         <h2 id="problem">The problem</h2>
-        <p>Every embedding, reranking and assistant call went to paid APIs. Each call cost money that could've been saved.</p>
+        <p>Every embedding, reranking and assistant call went to paid APIs. Each call cost money that could have been saved.</p>
         <p>Coding and developer tooling on frontier APIs was expensive too, even for simple work a smaller model can handle.</p>
       </section>
 
       <section data-nodes="" aria-labelledby="owned">
         <h2 id="owned">What I owned</h2>
-        <p>The end to end local infrastructure setup. From choosing models to serving them, designing the endpoint, and connecting production apps.</p>
+        <p>I owned the local inference setup end to end, from choosing models to serving them, designing the endpoint and connecting production apps.</p>
         <p>The main user is the <a href="../rag/">Agentic RAG assistant</a>, which has its own case study.</p>
       </section>
 
@@ -114,9 +114,9 @@
         <h2 id="how">How it works</h2>
         <div class="step" data-nodes="ragapp langfuseapp llamaswap codeassist">
           <h3>One endpoint for every app</h3>
-          <p>Using <span class="term" data-node="llamaswap">llama-swap</span>, allowed for multiple OpenAI-compatible endpoints (completions, embeddings, reranking) to be called on a single port.</p>
+          <p><span class="term" data-node="llamaswap">llama-swap</span> puts every local model behind one OpenAI-compatible endpoint on a single port, with a separate route for each kind of call: completions, embeddings and reranking.</p>
         </div>
-        <div class="step" data-nodes="llamaswap podman embed rerank qwen">
+        <div class="step" data-nodes="llamaswap podman embed rerank coder">
           <h3>Models start on demand</h3>
           <p>vLLM serves open-weight models in <span class="term" data-node="podman">Podman containers</span>, and llama-swap starts those containers on demand.</p>
         </div>
@@ -128,14 +128,14 @@
 
       <section data-nodes="" aria-labelledby="decisions">
         <h2 id="decisions">Decisions</h2>
-        <div class="step" data-nodes="api ragapp embed rerank codeassist qwen">
+        <div class="step" data-nodes="api ragapp embed rerank codeassist coder">
           <h3>Local or API, per workload</h3>
           <p>Embedding and reranking use small models that run quickly on one GPU, and simple coding tasks and developer tooling can tolerate a slower local model. The RAG assistant’s answer generation and its LLM judge stay on an <span class="term" data-node="api">external API</span>, because users wait on them and they need a stronger model.</p>
           <p class="run"><b>Trade-off.</b> The answers and the judge still carry a per-call API fee. In return, the users get lower latency with higher model intelligence.</p>
         </div>
-        <div class="step" data-nodes="codeassist langfuseapp qwen">
+        <div class="step" data-nodes="codeassist langfuseapp coder">
           <h3>Simple coding work goes local</h3>
-          <p>Coding and developer tooling adds up on APIs, so I decided to use local models for simple, small edits.
+          <p>Coding and developer tooling adds up on APIs, so I decided to use local models for simple, small edits.</p>
         </div>
       </section>
     </div>
