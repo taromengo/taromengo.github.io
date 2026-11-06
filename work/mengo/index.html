@@ -26,6 +26,9 @@
   /* The band keeps the logo's ground; its accent is mango yellow, with the logo's leaf for the motif's checks. */
   .band[data-brand="mengo"] { --band-bg: #2d2015; --band-fg: #fdeccb; --band-muted: #dcc4a0; --band-faint: #5e4932; --band-accent: #f8b807; --band-leaf: #7a8a3c; }
   code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.86em; }
+  .demo { margin: 0 0 24px; }
+  .demo img { display: block; width: 100%; height: auto; border: 1px solid var(--hair); }
+  .demo figcaption { font-size: 14px; color: var(--ink-3); margin-top: 8px; }
   .fig-label { fill: var(--ink-3); font-size: 12.5px; font-weight: 500; }
   .fig-head { fill: var(--ink-2); font-size: 13px; font-weight: 700; }
   .loop-frame { fill: none; stroke: var(--hair); stroke-width: 1; }
@@ -120,6 +123,13 @@
 
       <section data-nodes="" aria-labelledby="how">
         <h2 id="how">How it works</h2>
+        <figure class="demo">
+          <picture>
+            <source media="(prefers-reduced-motion: reduce)" srcset="mengo-workflow-poster.png">
+            <img src="mengo-workflow.gif" width="1440" height="900" loading="lazy" alt="Mengo workflow in a terminal: prepare a spec, implement, check, review and commit.">
+          </picture>
+          <figcaption>Scripted demo replay using Mengo’s production progress card; timing condensed.</figcaption>
+        </figure>
         <p>The checks, the repair budget, the reviewer agent and the pause let me trust an “AFK” run. The per-ticket commits and the records under <code>.mengo/</code> are what I evaluate afterwards.</p>
         <div class="step" data-nodes="spec tickets">
           <h3>Write the plan</h3>
@@ -163,9 +173,16 @@
     </div>
   </main>
 
+  <nav class="next" aria-label="Next case study">
+    <span>Next</span>
+    <a href="../formulation/">Formulation optimizer <svg width="20" height="20" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
+  </nav>
+
   <footer>
     <span>Joel Lee · Singapore</span>
     <nav aria-label="Footer">
+      <a href="https://www.linkedin.com/in/joellee3433b221a" rel="noopener">LinkedIn</a>
+      <a href="mailto:cryptic912@gmail.com">Email</a>
       <a href="../../">All systems</a>
     </nav>
   </footer>

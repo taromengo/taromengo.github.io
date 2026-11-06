@@ -166,7 +166,8 @@
         </div>
         <div class="step" data-nodes="staging schema">
           <h3>Staged the data before migrating it</h3>
-          <p>Instead of loading the spreadsheets straight into the final tables, I passed them through staging tables with cleaning and consistency checks, then migrated them.</p>
+          <p>Instead of loading the spreadsheets straight into the final tables, I passed them through staging tables with cleaning and consistency checks, then migrated them to ensure dirty data is out of production.</p>
+          <p class="run"><b>Trade-off.</b> New data takes one extra step before people can use it.</p>
         </div>
         <div class="step" data-nodes="access app users">
           <h3>An app in front of the database</h3>
@@ -181,9 +182,16 @@
     </div>
   </main>
 
+  <nav class="next" aria-label="Next case study">
+    <span>Next</span>
+    <a href="../platform/">Centralized App platform <svg width="20" height="20" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
+  </nav>
+
   <footer>
     <span>Joel Lee · Singapore</span>
     <nav aria-label="Footer">
+      <a href="https://www.linkedin.com/in/joellee3433b221a" rel="noopener">LinkedIn</a>
+      <a href="mailto:cryptic912@gmail.com">Email</a>
       <a href="../../">All systems</a>
       <button class="theme" type="button" id="theme"></button>
     </nav>
